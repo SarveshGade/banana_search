@@ -25,7 +25,8 @@ def get_access_token(client_id, client_secret):
         "Authorization": f"Basic {encoded_credentials}"
     }
     data = {
-        "grant_type": "client_credentials"
+        "grant_type": "client_credentials",
+        "scope": "product.compact"
     }
     
     response = requests.post(token_url, headers=headers, data=data, timeout=10)
@@ -79,8 +80,8 @@ def search_products(store_id, keyword, token):
     """
     products_url = "https://api.kroger.com/v1/products"
     headers = {
+        "Authorization": f"bearer {token}",
         "Accept": "application/json",
-        "Authorization": f"Bearer {token}"
     }
     params = {
         "filter.locationId": store_id,  # Filter results by store location
@@ -122,13 +123,16 @@ if __name__ == "__main__":
         products = search_products(store_id, search_keyword, access_token)
         
         print("\nProducts found:")
+        import pprint
+        pprint.pprint(products)
         for product in products:
+            product_name = product.get("description")
             product_id = product.get("productId")
             # Assume the product's first item holds the pricing info
             price = None
             if product.get("items") and len(product["items"]) > 0:
                 price = product["items"][0].get("price", {}).get("regular")
-            print(f"Product ID: {product_id}, Price: {price}")
+            print(f"Product Name: {product_name}, Price: {price}")
     
     except Exception as e:
         print("Error:", e)
