@@ -1,7 +1,13 @@
 import requests
 import base64
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from maps_api import stores
+
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -31,7 +37,7 @@ def get_access_token(client_id, client_secret):
     
     return token
 
-def get_store_id(address, token):
+def get_store_id(store, token):
     """
     Use the Kroger Location API to search for a store by address.
     Adjust the query parameter based on the API documentation.
@@ -41,18 +47,22 @@ def get_store_id(address, token):
         "Authorization": f"Bearer {token}",
         "Accept": "application/json"
     }
+    
+    store_address = store["vicinity"]
+    lat = store["lat"]
+    lng = store["lng"]
+    
     # The parameter key may vary (e.g., filter.address, filter.postalCode, etc.)
     params = {
         "filter.radiusInMiles": 10,
         "filter.limit": 1,
-        "filter.lat.near": 32.6188821,
-        "filter.lon.near": -83.6953685
+        "filter.lat.near": lat,
+        "filter.lon.near": lng,
     }
     
     response = requests.get(location_url, headers=headers, params=params, timeout=10)
     response.raise_for_status()
     data = response.json()
-    print(data)
     
     if "data" in data and data["data"]:
         # Pick the first matching store
@@ -69,8 +79,8 @@ def search_products(store_id, keyword, token):
     """
     products_url = "https://api.kroger.com/v1/products"
     headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Authorization": f"Bearer {token}"
     }
     params = {
         "filter.locationId": store_id,  # Filter results by store location
@@ -93,14 +103,21 @@ if __name__ == "__main__":
     address = "3094 Watson Blvd, Warner Robins, GA"  # Can be a full address or postal code
     search_keyword = "eggs"
     
+    store_list = stores.get_stores_by_address(address=address)
+    store_address = ""
+    for store in store_list:
+        if store["name"] == "Kroger":
+            kroger = store
+            break
+    
     try:
         # Step 1: Get the access token
         access_token = get_access_token(client_id, client_secret)
         print("Access token obtained successfully.")
         
         # Step 2: Get a store ID from the location API using the address
-        store_id = get_store_id(address, access_token)
-        
+        store_id = get_store_id(store, access_token)
+                
         # Step 3: Search for products at that store using the products API
         products = search_products(store_id, search_keyword, access_token)
         
