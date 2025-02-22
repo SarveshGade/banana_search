@@ -37,8 +37,7 @@ def search_grocery_stores(lat: float, lng: float, api_key: str, radius: int):
     }
     response = requests.get(places_url, params=params)
     data = response.json()
-    if data["status"] == "OK":
-        # Filter out any place that lists 'gas_station' in its types.
+    if data["status"] == "OK" or data["status"] == "ZERO_RESULTS":
         results = [
             place for place in data["results"]
             if "gas_station" not in place.get("types", [])
@@ -62,7 +61,7 @@ def search_grocery_keyword(lat: float, lng: float, api_key: str, radius: int):
     }
     response = requests.get(places_url, params=params)
     data = response.json()
-    if data["status"] == "OK":
+    if data["status"] == "OK" or data["status"] == "ZERO_RESULTS":
         results = [
             place for place in data["results"]
             if "gas_station" not in place.get("types", [])
@@ -78,7 +77,6 @@ def filter_by_travel_time(origin: str, destinations: list, max_duration_minutes:
     Returns a list of dictionaries containing the store info and its drive time.
     """
     url = "https://maps.googleapis.com/maps/api/distancematrix/json"
-    # Build a string of destination coordinates separated by '|'
     dest_str = "|".join(
         [f"{store['geometry']['location']['lat']},{store['geometry']['location']['lng']}" for store in destinations]
     )
@@ -94,10 +92,8 @@ def filter_by_travel_time(origin: str, destinations: list, max_duration_minutes:
         raise Exception("Distance Matrix API error: " + data["status"])
     
     filtered = []
-    # Process drive time for each destination
     for i, element in enumerate(data["rows"][0]["elements"]):
         if element["status"] == "OK":
-            # Convert duration from seconds to minutes
             duration_minutes = element["duration"]["value"] / 60.0
             if duration_minutes <= max_duration_minutes:
                 store_info = destinations[i]
@@ -112,63 +108,74 @@ def filter_by_travel_time(origin: str, destinations: list, max_duration_minutes:
 def filter_duplicates_by_brand(stores: list):
     """
     Groups stores by brand and returns only the closest store for each brand.
-    Uses a list of known brand keywords to match store names.
+    Uses the first word in the store's name as a simple brand key.
     """
-    
     filtered = {}
     for store in stores:
-        
-        name = store["name"]
-        if name.split()[0] in filtered:
-            filtered[name.split()[0]] = store if filtered[name.split()[0]]["drive_time_minutes"] > store["drive_time_minutes"] else filtered[name.split()[0]]
+        # Using the first word of the store name as the brand key
+        brand = store["name"].split()[0]
+        if brand in filtered:
+            # Keep the store with the shorter drive time
+            if store["drive_time_minutes"] < filtered[brand]["drive_time_minutes"]:
+                filtered[brand] = store
         else:
-            filtered[name.split()[0]] = store;
+            filtered[brand] = store
+    return list(filtered.values())
 
-    return filtered.values()
 
-
-# Example usage:
-def get_stores():
-    address = "1025 Spring St NW, Atlanta, GA"
-    API_KEY = maps_key  # using the API key from the .env file
-    
-    # Convert the address to coordinates
+def get_stores_by_address(address: str):
+    """
+    Given an address, this function:
+      - Geocodes the address.
+      - Searches for nearby grocery stores (using both type and keyword queries).
+      - Increases the search radius until at least 10 deduplicated stores are found.
+      - Returns a list of store dictionaries.
+    """
+    API_KEY = maps_key  # Use the API key from the .env file
     lat, lng = geocode_address(address, API_KEY)
     origin_str = f"{lat},{lng}"
     
     radius = 5000
     final_stores = []
     
-    # Increase the radius by 5000 until there are at least 10 entries in final_stores
+    # Increase or adjust the radius until at least 10 deduplicated stores are found
     while len(final_stores) < 10:
-        # Gather stores from both search functions using the current radius
         stores = search_grocery_stores(lat, lng, API_KEY, radius)
         stores += search_grocery_keyword(lat, lng, API_KEY, radius)
         
+        # If too many results are returned, adjust the radius downward
         if len(stores) > 25:
             radius -= 5000
-            
             stores = search_grocery_stores(lat, lng, API_KEY, radius)
             stores += search_grocery_keyword(lat, lng, API_KEY, radius)
-            
-			# Filter stores by drive time
             filtered_stores = filter_by_travel_time(origin_str, stores, max_duration_minutes=20)
-			# Remove duplicate brands, keeping only the closest store for each brand
             final_stores = filter_duplicates_by_brand(filtered_stores)
-			
             break
-            
-        # Filter stores by drive time
+        
         filtered_stores = filter_by_travel_time(origin_str, stores, max_duration_minutes=20)
-        # Remove duplicate brands, keeping only the closest store for each brand
         final_stores = filter_duplicates_by_brand(filtered_stores)
         
         if len(final_stores) < 10:
             radius += 5000  # Increase the radius if not enough results
     
-    # Output the store name, address, and drive time
-    for store in final_stores:
-        print(f"{store['name']} - {store['vicinity']} (Drive time: {store['drive_time_minutes']} minutes)")
-        
+    return final_stores
 
-get_stores();
+
+# If running as a script, allow command-line arguments:
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Get nearby grocery stores by address."
+    )
+    parser.add_argument(
+        "--store_address",
+        type=str,
+        required=True,
+        help="The address (or ZIP code) to search near."
+    )
+    args = parser.parse_args()
+    
+    stores = get_stores_by_address(args.store_address)
+    for store in stores:
+        print(f"{store['name']} - {store['vicinity']} (Drive time: {store['drive_time_minutes']} minutes)")

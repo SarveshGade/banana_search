@@ -1,20 +1,35 @@
 import requests
 import json
+import argparse
 
 # --- Configuration ---
-# These endpoints and payload structures are based on the provided cURL examples.
 LOCATOR_URL = "https://alphaapi.brandify.com/rest/locatorsearch"
 GRAPHQL_URL = "https://www.traderjoes.com/api/graphql"
-
-# For the locator search, we use a fixed appkey from the example.
 APP_KEY = "8BC3433A-60FC-11E3-991D-B2EE0C70A832"
+
+# --- Helper function for keyword matching ---
+def matches_keyword(item_name: str, keyword: str) -> bool:
+    """
+    Returns True if the keyword appears in the item_name.
+    This check is case-insensitive and performs a basic check for singular/plural variations.
+    """
+    # Normalize both strings to lowercase
+    name_lower = item_name.lower()
+    keyword_lower = keyword.lower()
+    
+    # Basic check: does the keyword appear in the name?
+    if keyword_lower in name_lower:
+        return True
+    # Check singular/plural differences: if keyword ends with 's', try without it.
+    if keyword_lower.endswith('s') and keyword_lower[:-1] in name_lower:
+        return True
+    # Or if adding an 's' helps match:
+    if (keyword_lower + 's') in name_lower:
+        return True
+    return False
 
 # --- Function to get store code (clientkey) ---
 def get_store_code(store_address: str, search_radius: str = "500", country: str = "US"):
-    """
-    Send a POST request to the Trader Joe's locator API (Brandify) to search for a store.
-    Returns the store code (clientkey) of the first matching store.
-    """
     payload = {
         "request": {
             "appkey": APP_KEY,
@@ -24,7 +39,7 @@ def get_store_code(store_address: str, search_radius: str = "500", country: str 
                 "limit": 4,
                 "geolocs": {
                     "geoloc": [{
-                        "addressline": store_address,  # can be a full address or ZIP code
+                        "addressline": store_address,
                         "country": country,
                         "latitude": "",
                         "longitude": ""
@@ -47,15 +62,9 @@ def get_store_code(store_address: str, search_radius: str = "500", country: str 
     response = requests.post(LOCATOR_URL, headers=headers, json=payload)
     if response.status_code == 200:
         data = response.json()
-        # Debug: print(data)
-        # Here, adjust according to the actual response structure.
-        # For example, if the first store is located at data["response"]["results"][0],
-        # and its clientkey is stored under the key "clientkey":
         try:
-            print(data["response"]["collection"][0]["clientkey"])
             store = data["response"]["collection"][0]
-            # The store identifier might be under "clientkey" or another similar key.
-            store_code = store.get("clientkey")  # Adjust this if the key is different.
+            store_code = store.get("clientkey")
             if not store_code:
                 raise ValueError("Store code not found in response.")
             return store_code
@@ -66,11 +75,6 @@ def get_store_code(store_address: str, search_radius: str = "500", country: str 
 
 # --- Function to search products using GraphQL ---
 def search_products(store_code: str, search_term: str, page_size: int = 15, current_page: int = 1):
-    """
-    Use the Trader Joe's GraphQL API to search for products at a specific store.
-    The store_code is used as the "storeCode" in the query variables.
-    """
-    # Construct the GraphQL payload with variables.
     payload = {
         "operationName": "SearchProducts",
         "variables": {
@@ -121,36 +125,39 @@ def search_products(store_code: str, search_term: str, page_size: int = 15, curr
     }
     response = requests.post(GRAPHQL_URL, headers=headers, json=payload)
     if response.status_code == 200:
-        data = response.json()
-        return data
+        return response.json()
     else:
         raise Exception(f"GraphQL API error: HTTP {response.status_code}")
 
-# --- Main script execution ---
-if __name__ == "__main__":
-    # Input: store's address (or ZIP code) and search term.
-    store_address = "931 Monroe Drive Northeast, Atlanta"
-    search_term = "eggs"
-    
+def get_results(store_address, search_term):
     try:
-        # Step 1: Locate the store and obtain its code
         store_code = get_store_code(store_address)
         print(f"Found store code: {store_code}")
         
-        # Step 2: Search for the product using the store code
         products_data = search_products(store_code, search_term)
-        
-        # Print the found products (adjust the parsing as needed)
         items = products_data.get("data", {}).get("products", {}).get("items", [])
-        if items:
+        
+        # Filter the items so that only those with the keyword in the name are kept.
+        filtered_items = [item for item in items if matches_keyword(item.get("name", ""), search_term)]
+        
+        if filtered_items:
             print(f"Products found for '{search_term}' at store {store_code}:")
-            for item in items:
+            for item in filtered_items:
                 name = item.get("name")
                 sku = item.get("sku")
                 price = item.get("retail_price")
                 print(f"Name: {name} | SKU: {sku} | Price: {price}")
         else:
-            print(f"No products found for '{search_term}' at store {store_code}.")
+            print(f"No products found for '{search_term}' at store {store_code} that match the keyword.")
     
     except Exception as e:
         print("An error occurred:", e)
+
+# --- Main execution with argparse ---
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Search for a product at a specific Trader Joe's store.")
+    parser.add_argument("--store_address", type=str, required=True, help="The store address or ZIP code.")
+    parser.add_argument("--search_term", type=str, required=True, help="The product to search for (e.g., eggs).")
+    args = parser.parse_args()
+    
+    get_results(store_address=args.store_address, search_term=args.search_term)
