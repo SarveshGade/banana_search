@@ -141,7 +141,7 @@ def get_stores_by_address(address: str):
     final_stores = []
     
     # Increase or adjust the radius until at least 10 deduplicated stores are found
-    while len(final_stores) < 10:
+    while len(final_stores) < 10 and radius < 50000:
         stores = search_grocery_stores(lat, lng, API_KEY, radius)
         stores += search_grocery_keyword(lat, lng, API_KEY, radius)
         
