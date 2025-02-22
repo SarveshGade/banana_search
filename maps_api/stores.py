@@ -171,4 +171,4 @@ def get_stores():
         print(f"{store['name']} - {store['vicinity']} (Drive time: {store['drive_time_minutes']} minutes)")
         
 
-get_stores();
+get_stores()
