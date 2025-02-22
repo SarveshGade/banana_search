@@ -1,115 +1,51 @@
-# Note: Replace **<YOUR_APPLICATION_TOKEN>** with your actual Application token
-
 import requests
-from dotenv import load_dotenv
-import os
-import streamlit as st
+import json
 
+# Replace with your Langflow base URL and flow ID
+LANGFLOW_URL = "https://api.langflow.astra.datastax.com"
+FLOW_ID = "a430cc57-06bb-4c11-be39-d3d4de68d2c4"  # Use your actual flow ID
 
-load_dotenv()
+# -----------------------------
+# Step 1: Upload the image file
+# -----------------------------
+upload_url = f"{LANGFLOW_URL}/api/v1/files/upload/{FLOW_ID}"
 
-BASE_API_URL = "https://api.langflow.astra.datastax.com"
-LANGFLOW_ID = "dcbab69c-68d2-4b67-9c89-1b5ec6803b26"
-FLOW_ID = "4576938a-3247-4c2e-b8aa-f57b07ddf280"
-APPLICATION_TOKEN = os.environ.get("APP_TOKEN")
-ENDPOINT = "" # You can set a specific endpoint name in the flow settings
+# Make sure the file exists and the path is correct
+image_file_path = "cv/frij.jpg"  # Replace with your file path
 
-# You can tweak the flow by adding a tweaks dictionary
-# e.g {"OpenAI-XXXXX": {"model_name": "gpt-4"}}
-TWEAKS = {
-  "ChatInput-QMZYv": {},
-  "OpenAIModel-HHR0J": {},
-  "Prompt-wyeZn": {}
-}
+with open(image_file_path, "rb") as file_obj:
+    # requests will set the correct multipart/form-data header automatically
+    response = requests.post(upload_url, files={"file": file_obj})
 
-def upload_image(image_file):
-    """Uploads an image to Langflow and returns the file path."""
-    upload_url = f"{BASE_API_URL}/api/v1/files/upload/{FLOW_ID}"
-    
-    # Ensure token is valid
-    if not APPLICATION_TOKEN:
-        st.error("Missing API token. Please set APP_TOKEN in your environment.")
-        return None
+# Check the upload response
+upload_response = response.json()
+print("Upload response:", json.dumps(upload_response, indent=2))
 
-    headers = {"Authorization": f"Bearer {APPLICATION_TOKEN}"}
-    
-    files = {"file": (image_file.name, image_file, image_file.type)}
-    
-    # Debugging print statements
-    print(f"Uploading to: {upload_url}")
-    print(f"Headers: {headers}")
-    print(f"File Name: {image_file.name}, Type: {image_file.type}")
+# The response should include a file_path like:
+# "file_path": "a430cc57-06bb-4c11-be39-d3d4de68d2c4/2024-11-27_14-47-50_image-file.png"
+file_path_value = upload_response.get("file_path")
+if not file_path_value:
+    raise ValueError("File upload did not return a valid file_path.")
 
-    try:
-        response = requests.post(upload_url, files=files, headers=headers)
-        print("Response Status:", response.status_code)
-        print("Response Text:", response.text)  # See full error message
-        
-        if response.status_code == 200:
-            return response.json().get("file_path")
-        else:
-            st.error(f"Error uploading image: {response.text}")
-            return None
-    except Exception as e:
-        st.error(f"Request failed: {str(e)}")
-        return None
+# ------------------------------------------------
+# Step 2: Run the flow, passing the file reference
+# ------------------------------------------------
+run_url = f"{LANGFLOW_URL}/api/v1/run/{FLOW_ID}?stream=false"
 
-
-def run_flow(message: str, file_path: str = None) -> dict:
-    """
-    Run a flow with a given message and optional tweaks.
-
-    :param message: The message to send to the flow
-    :param endpoint: The ID or the endpoint name of the flow
-    :param tweaks: Optional tweaks to customize the flow
-    :return: The JSON response from the flow
-    """
-    api_url = f"{BASE_API_URL}/api/v1/run/{FLOW_ID}?stream=false"
-    headers = {
-        "Authorization": f"Bearer {APPLICATION_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "output_type": "chat",
-        "input_type": "chat",
-        "tweaks": {
-            "ChatInput-QMZYv": {
-                "input_value": message,
-                "files": file_path if file_path else ""
-            }
+# Create the payload with tweaks; update the component name if needed.
+payload = {
+    "output_type": "chat",
+    "input_type": "chat",
+    "tweaks": {
+        "ChatInput-b67sL": {
+            "files": file_path_value,
+            "input_value": "what do you see?"
         }
     }
+}
 
-    response = requests.post(api_url, json=payload, headers=headers)
-    return response.json()
+headers = {"Content-Type": "application/json"}
 
-
-def main():
-    st.title("Chat Interface")
-    message = st.text_area("Message", placeholder="Ask something...")
-    uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
-    
-    if st.button("Run Flow"):
-        if not message.strip():
-            st.error("Please enter a message")
-            return
-
-        file_path = None
-        if uploaded_file:
-            st.info("Uploading image...")
-            file_path = upload_image(uploaded_file)
-            if not file_path:
-                return  # Stop if image upload fails
-
-        try:
-            with st.spinner("Running AI analysis..."):
-                response = run_flow(message, file_path)
-            response_text = response["outputs"][0]["outputs"][0]["results"]["message"]["text"]
-            st.markdown(response_text)
-        except Exception as e:
-            st.error(str(e))
-            
-if __name__ == "__main__":
-    main()
-
+# Send the POST request to run the flow
+response_run = requests.post(run_url, headers=headers, json=payload)
+print("Run response:", json.dumps(response_run.json(), indent=2))

@@ -2,6 +2,7 @@ import requests
 import base64
 import os
 import sys
+import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from maps_api import stores
@@ -123,8 +124,6 @@ if __name__ == "__main__":
         products = search_products(store_id, search_keyword, access_token)
         
         print("\nProducts found:")
-        import pprint
-        pprint.pprint(products)
         for product in products:
             product_name = product.get("description")
             product_id = product.get("productId")
