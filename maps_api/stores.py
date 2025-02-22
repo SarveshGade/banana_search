@@ -99,6 +99,8 @@ def filter_by_travel_time(origin: str, destinations: list, max_duration_minutes:
                 store_info = destinations[i]
                 filtered.append({
                     "name": store_info.get("name"),
+                    "lat": store_info.get("geometry").get("location").get("lat"),
+                    "lng": store_info.get("geometry").get("location").get("lng"),
                     "vicinity": store_info.get("vicinity"),
                     "drive_time_minutes": round(duration_minutes, 1)
                 })
