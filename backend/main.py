@@ -97,9 +97,9 @@ async def api_calls(ingredient_input: list[str] = Form(...), address: str = Form
                     "name": product_name,
                     "price": price
                 })
+            print(temp, "KROG")
             # Map the missing item to its list of products in the Kroger data
-            if stores_data["Kroger"]["ingredients"]:
-                stores_data["Kroger"]["ingredients"][item] = sorted(temp, key = lambda x: x['price'])[0]
+            stores_data["Kroger"]["ingredients"][item] = sorted(temp, key = lambda x: x['price'])
 
     
 
@@ -130,10 +130,10 @@ async def api_calls(ingredient_input: list[str] = Form(...), address: str = Form
                     "name": product_name,
                     "retail_price": retail_price
                 })
+                print(product_list, "JOE")
             
             # Map the missing item to its product list in the Trader Joe's section
-            if stores_data["Trader Joe's"]["ingredients"]:
-                stores_data["Trader Joe's"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]
+            stores_data["Trader Joe's"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])
 
     zipcode = get_zipcode(address)
 
@@ -177,27 +177,38 @@ async def api_calls(ingredient_input: list[str] = Form(...), address: str = Form
         
     # Search in Aldi
     if aldi_store:
-        stores_data["Aldi"] = {}  # Initialize Aldi key in our results
-        for item in ingredient_input:  # For each missing ingredient
-            # Retrieve Aldi products for the given address and search term
+        # Initialize Aldi data structure with all required keys
+        stores_data["Aldi"] = {
+            "address": aldi_address,
+            "drive_time_minutes": drive_time,
+            "ingredients": {}  # Initialize the ingredients dictionary
+        }
+
+        for item in ingredient_input:
             products = get_aldi_products(store_id, item)
-            if not products:
-                continue
-            product_list = []  # Initialize a list to hold product details for this item
-            for product in products[:5]:  # Limit to first 5 products for brevity
-                name = product.get("name")  # Extract product name
-                retail_price = product.get("price", {}).get("amountRelevantDisplay")  # Extract price display
-                product_list.append({
-                    "name": name,
-                    "retail_price": retail_price
-                })
-            # Map the missing item to its list of products under Aldi
-            if stores_data["Aldi"]:
-                stores_data["Aldi"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]  # ADDED: Assign product list for this missing item
+            product_list = []
+            
+            if products:
+                for product in products[:5]:
+                    if not product:
+                        continue
+                    name = product.get("name")
+                    retail_price = product.get("price", {}).get("amountRelevantDisplay", "")
+                    
+                    product_list.append({
+                        "name": name,
+                        "retail_price": retail_price
+                    })
+                
+                # Store the products without sorting (or sort if needed)
+                stores_data["Aldi"]["ingredients"][item] = product_list
+            else:
+                stores_data["Aldi"]["ingredients"][item] = []
 
     # import json
     # with open("output.txt", "w") as file:
     #     json.dump(stores_data, file, indent=4)
+    print(stores_data)
 
 
     return JSONResponse(content={"ingredient_list": ingredient_input, "stores": stores_data})

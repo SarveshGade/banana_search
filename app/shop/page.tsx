@@ -65,6 +65,8 @@ export default function Shop() {
     e.preventDefault();
     const formData = new FormData();
     const groceryNames = items.map(item => item.name.trim());
+    
+    // Send the array directly, not as a nested JSON string
     formData.append("ingredient_input", JSON.stringify(groceryNames));
     formData.append("address", address);
     
@@ -77,7 +79,6 @@ export default function Shop() {
         const response = await fetch("http://localhost:8000/groceries", {
             method: "POST",
             body: formData,
-            // Add these headers
             headers: {
                 'Accept': 'application/json',
             },
