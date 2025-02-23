@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShoppingListItem } from "@/components/shopping-list-item";
 import { useSearchParams } from "next/navigation";
+import router from "next/router";
 
 export default function Shop() {
   const searchParams = useSearchParams();
@@ -34,6 +35,11 @@ export default function Shop() {
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
   };
+
+  const handleGenerateStorePrices = () => {
+
+    router.push("/store_prices");
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -80,6 +86,17 @@ export default function Shop() {
           </ul>
         </div>
       </main>
+      {/* NEW: Add a footer with a "Store Prices" button at the bottom of the screen */}
+      <footer className="px-4 py-4">
+        <div className="container mx-auto text-center">
+          <Link href="/store-prices">
+            <Button className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-yellow-900"
+            onClick={handleGenerateStorePrices}>
+              Store Prices
+            </Button>
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
