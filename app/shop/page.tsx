@@ -13,7 +13,6 @@ export default function Shop() {
   const searchParams = useSearchParams();
   // Get all query parameters named "items"
   const queryItems = searchParams.getAll("items");
-  const [missingIngredients, setMissingIngredients] = useState<string[]>([]);
 
   // Initialize the shopping list with the query items (each with a default quantity of 1)
   // If no query parameters exist (i.e. when linked from Dashboard), the list remains empty.
@@ -38,7 +37,7 @@ export default function Shop() {
   };
 
   const handleGenerateStorePrices = () => {
-
+    localStorage.setItem("shoppingListItems", JSON.stringify(items));
     router.push("/store_prices");
   }
 
