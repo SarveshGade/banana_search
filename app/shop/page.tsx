@@ -24,7 +24,7 @@ export default function Shop() {
       if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "string") {
         return parsed.map((ingredient: string) => ({ name: ingredient, quantity: 1 }));
       }
-      // Otherwise, assume it’s already in the correct format.
+      // Otherwise, assume it's already in the correct format.
       return parsed;
     }
     return [];
@@ -67,32 +67,40 @@ export default function Shop() {
     const groceryNames = items.map(item => item.name.trim());
     formData.append("ingredient_input", JSON.stringify(groceryNames));
     formData.append("address", address);
-    console.log("formData: ", formData);
+    
+    console.log("Sending data:", {
+        ingredients: groceryNames,
+        address: address
+    });
+
     try {
-      const response = await fetch("http://localhost:8000/groceries", {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error("Failed to analyze groceries");
-      }
-      const data = await response.json();
-      console.log("stores received", data)
+        const response = await fetch("http://localhost:8000/groceries", {
+            method: "POST",
+            body: formData,
+            // Add these headers
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to analyze groceries: ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log("stores received", data);
 
-      setTimeout(() => {
-        const ingredient_output = JSON.parse(data.ingredient_list);
         const stores = data.stores;
-
-        setIngredients(ingredient_output);
         setStores(stores);
         localStorage.setItem("shoppingListItems", JSON.stringify(items));
-        localStorage.setItem("store_date", stores);
-      }, 1500);
+        localStorage.setItem("store_data", JSON.stringify(stores));  // Fixed typo in key name
+        
+        router.push("/storePrices");
     } catch (error) {
-      console.error("Error generating output:", error);
+        console.error("Error generating output:", error);
     }
-    router.push("/storePrices");
-  }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">

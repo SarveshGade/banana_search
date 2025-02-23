@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 import base64
+import json
+from typing import List
 import io
 from PIL import Image
 from openai import OpenAI
@@ -11,20 +13,19 @@ from kroger.api_fetch import get_access_token, search_products, get_store_id
 from maps_api.stores import get_stores_by_address, get_zipcode
 from trader_joes.webscrape_joes import get_results
 from aldi.webscrape_aldi import get_aldi_products, get_aldi_stores
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
-
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or restrict to your frontend origin
+    allow_origins=["*"],  # Allow frontend origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
+ )
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 client_id = os.getenv("KROGER_CLIENT_ID")
@@ -62,12 +63,11 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...)):
     )
     missing_items = response.choices[0].message.content.strip().split(",")
     return JSONResponse(content={"recipe": recipe, "missing_items": missing_items})
-    
-    
-    
+
+
     
 @app.post("/groceries")
-async def api_calls(ingredient_input: str = Form(...), address: str = Form(...)):
+async def api_calls(ingredient_input: list[str] = Form(...), address: str = Form(...)):
     access_token = get_access_token(client_id, client_secret)
     address = address
     store_list = get_stores_by_address(address)
@@ -98,7 +98,8 @@ async def api_calls(ingredient_input: str = Form(...), address: str = Form(...))
                     "price": price
                 })
             # Map the missing item to its list of products in the Kroger data
-            stores_data["Kroger"]["ingredients"][item] = sorted(temp, key = lambda x: x['price'])[0]
+            if stores_data["Kroger"]["ingredients"]:
+                stores_data["Kroger"]["ingredients"][item] = sorted(temp, key = lambda x: x['price'])[0]
 
     
 
@@ -131,7 +132,8 @@ async def api_calls(ingredient_input: str = Form(...), address: str = Form(...))
                 })
             
             # Map the missing item to its product list in the Trader Joe's section
-            stores_data["Trader Joe's"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]
+            if stores_data["Trader Joe's"]["ingredients"]:
+                stores_data["Trader Joe's"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]
 
     zipcode = get_zipcode(address)
 
@@ -190,7 +192,8 @@ async def api_calls(ingredient_input: str = Form(...), address: str = Form(...))
                     "retail_price": retail_price
                 })
             # Map the missing item to its list of products under Aldi
-            stores_data["Aldi"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]  # ADDED: Assign product list for this missing item
+            if stores_data["Aldi"]:
+                stores_data["Aldi"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]  # ADDED: Assign product list for this missing item
 
     # import json
     # with open("output.txt", "w") as file:
