@@ -1,0 +1,153 @@
+{
+    "Trader Joe's": {
+        "all-purpose flour": [],
+        " baking powder": [],
+        " granulated sugar": [],
+        " salt": [
+            {
+                "name": "CRISPY OAT SEA SALT COOKIES",
+                "retail_price": "3.99"
+            },
+            {
+                "name": "COOKIES SEA SALT CHOC CHUNK",
+                "retail_price": "4.99"
+            },
+            {
+                "name": "TUNA SOLID WHITE ALBACORE NO SALT ADDED",
+                "retail_price": "1.99"
+            },
+            {
+                "name": "TUNA SOLID WHITE ALBACORE SALT ADDED",
+                "retail_price": "1.99"
+            },
+            {
+                "name": "BROWNIES SEA SALT",
+                "retail_price": "2.99"
+            }
+        ],
+        " unsalted butter": [],
+        " vanilla extract": [
+            {
+                "name": "PURE BOURBON ORG VANILLA EXTRACT",
+                "retail_price": "9.99"
+            },
+            {
+                "name": "HOL VANILLA EXTRACT 2 FOLD W/SEEDS ALCOHOL FREE",
+                "retail_price": "7.99"
+            }
+        ],
+        " vegetable oil": []
+    },
+    "Aldi": {
+        "all-purpose flour": [
+            {
+                "name": "All Purpose Flour, 5 lb",
+                "retail_price": "$2.55"
+            },
+            {
+                "name": "Almond  Flour, 16 oz",
+                "retail_price": "$5.65"
+            },
+            {
+                "name": "S'mores  Almond Flour Cookie, 3 oz",
+                "retail_price": "$1.09"
+            },
+            {
+                "name": "Sea Salt Flavored Almond Flour Crackers, 4.25 oz",
+                "retail_price": "$3.85"
+            },
+            {
+                "name": "Gluten Free Cheddar Flavored Almond Flour Crackers, 4.25 oz",
+                "retail_price": "$3.85"
+            }
+        ],
+        " baking powder": [
+            {
+                "name": "Baking Powder, 8.1 oz",
+                "retail_price": "$2.15"
+            },
+            {
+                "name": "Unsweetened Baking Cocoa Powder, 8 oz",
+                "retail_price": "$2.85"
+            },
+            {
+                "name": "Powdered Sugar,  32 oz",
+                "retail_price": "$2.15"
+            },
+            {
+                "name": "Powdered Sugar Mini Donut, 14 oz",
+                "retail_price": "$3.49"
+            }
+        ],
+        " granulated sugar": [
+            {
+                "name": "Granulated Sugar, 4 lb",
+                "retail_price": "$2.95"
+            },
+            {
+                "name": "Organic Cane Sugar Pouch, 32 oz",
+                "retail_price": "$3.45"
+            },
+            {
+                "name": "Morena Pure Cane Sugar, 6 lb",
+                "retail_price": "$7.05"
+            },
+            {
+                "name": "Powdered Sugar,  32 oz",
+                "retail_price": "$2.15"
+            },
+            {
+                "name": "Powdered Sugar Mini Donut, 14 oz",
+                "retail_price": "$3.49"
+            }
+        ],
+        " salt": [
+            {
+                "name": "Iodized Salt, 26 oz",
+                "retail_price": "$0.75"
+            },
+            {
+                "name": "Seasoned Salt, 16 oz",
+                "retail_price": "$3.19"
+            },
+            {
+                "name": "Pretzel Cracker Sea Salt",
+                "retail_price": "$3.29"
+            },
+            {
+                "name": "Organic Salted Butter, 16 oz",
+                "retail_price": "$6.05"
+            },
+            {
+                "name": "Sea Salt Grinder, 3.53 oz",
+                "retail_price": "$1.99"
+            }
+        ],
+        " unsalted butter": [
+            {
+                "name": "Unsalted Butter Sticks, 1 lb",
+                "retail_price": "$4.15"
+            }
+        ],
+        " vanilla extract": [
+            {
+                "name": "Pure Vanilla Extract, 2 oz",
+                "retail_price": "$3.55"
+            }
+        ],
+        " vegetable oil": [
+            {
+                "name": "Vegetable Oil Sticks, 1 lb",
+                "retail_price": "$1.55"
+            },
+            {
+                "name": "Pure Vegetable Oil, 48 fl oz",
+                "retail_price": "$3.59"
+            },
+            {
+                "name": "Tastes  Like Butter Vegetable Oil Spread, 15 oz",
+                "retail_price": "$3.05"
+            }
+        ]
+    }
+}

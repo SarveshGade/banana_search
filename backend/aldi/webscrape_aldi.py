@@ -55,46 +55,7 @@ def search_aldi_products(store_id: str, keyword: str):
     response.raise_for_status()
     return response.json()
 
-def get_aldi_products(address, keyword):
-    
-
-    zipcode = stores.get_zipcode(address)
-    store_list = stores.get_stores_by_address(address)
-
-    aldi_store = None
-    for store in store_list:
-        if store["name"] == "ALDI":
-            aldi_store = store
-            break
-
-    if not aldi_store:
-        print("No aldi store")
-        return
-
-    store_id = None
-    try:
-        stores_data = get_aldi_stores(zipcode, address)
-        data = stores_data.get("data", [])
-        if not data:
-            print("No stores found.")
-            exit(0)
-            
-        for store in data:
-            store_id = store.get("id", "Unknown ID")
-            attributes = store.get("attributes", {})
-            address_obj = attributes.get("address", {})
-
-            if round(float(address_obj.get("latitude")), 2) == round(float(aldi_store["lat"]), 2) and round(float(address_obj.get("latitude")), 2) == round(float(aldi_store["lat"]), 2):
-                addr1 = address_obj.get("address1", "")
-                city = address_obj.get("city", "")
-                region = address_obj.get("regionName", "")
-                zipcode = address_obj.get("zipCode", "")
-                formatted_address = f"{addr1}, {city}, {region} {zipcode}"
-                break
-
-            
-    except Exception as e:
-        print("Error:", e)
+def get_aldi_products(store_id, keyword):
     
     try:
         results = search_aldi_products(store_id, keyword)
@@ -103,12 +64,7 @@ def get_aldi_products(address, keyword):
         if not products:
             print("No products found.")
             return
-        
-        for product in products:
-            name = product.get("name", "Unnamed product")
-            price_info = product.get("price", {})
-            price_display = price_info.get("amountRelevantDisplay", "N/A")
-
+    
         return products
             
     except Exception as e:

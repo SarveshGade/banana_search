@@ -8,9 +8,9 @@ import io
 from PIL import Image
 from openai import OpenAI
 from kroger.api_fetch import get_access_token, search_products, get_store_id
-from maps_api.stores import get_stores_by_address
+from maps_api.stores import get_stores_by_address, get_zipcode
 from trader_joes.webscrape_joes import get_results
-from aldi.webscrape_aldi import get_aldi_products
+from aldi.webscrape_aldi import get_aldi_products, get_aldi_stores
 
 load_dotenv()
 
@@ -119,23 +119,65 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
             # Map the missing item to its product list in the Trader Joe's section
             stores_data["Trader Joe's"][item] = product_list
 
+    zipcode = get_zipcode(address)
+
+    aldi_store = None
+    for store in store_list:
+        if store["name"] == "ALDI":
+            aldi_store = store
+            break
+
+    if not aldi_store:
+        print("No aldi store")
+        return
+    
+    store_id = None
+    try:
+        aldi_stores = get_aldi_stores(zipcode, address)
+        data = aldi_stores.get("data", [])
+        if not data:
+            print("No stores found.")
+            exit(0)
+            
+        for store in data:
+            store_id = store.get("id", "Unknown ID")
+            attributes = store.get("attributes", {})
+            address_obj = attributes.get("address", {})
+
+            if round(float(address_obj.get("latitude")), 2) == round(float(aldi_store["lat"]), 2) and round(float(address_obj.get("latitude")), 2) == round(float(aldi_store["lat"]), 2):
+                addr1 = address_obj.get("address1", "")
+                city = address_obj.get("city", "")
+                region = address_obj.get("regionName", "")
+                zipcode = address_obj.get("zipCode", "")
+                formatted_address = f"{addr1}, {city}, {region} {zipcode}"
+                break
+
+            
+    except Exception as e:
+        print("Error:", e)
+        
     # Search in Aldi
-    stores_data["Aldi"] = {}  # Initialize Aldi key in our results
-    for item in missing_items:  # For each missing ingredient
-        # Retrieve Aldi products for the given address and search term
-        products = get_aldi_products(address, item)
-        if not products:
-            continue
-        product_list = []  # Initialize a list to hold product details for this item
-        for product in products[:5]:  # Limit to first 5 products for brevity
-            name = product.get("name")  # Extract product name
-            retail_price = product.get("price", {}).get("amountRelevantDisplay")  # Extract price display
-            product_list.append({
-                "name": name,
-                "retail_price": retail_price
-            })
-        # Map the missing item to its list of products under Aldi
-        stores_data["Aldi"][item] = product_list  # ADDED: Assign product list for this missing item
+    if aldi_store:
+        stores_data["Aldi"] = {}  # Initialize Aldi key in our results
+        for item in missing_items:  # For each missing ingredient
+            # Retrieve Aldi products for the given address and search term
+            products = get_aldi_products(store_id, item)
+            if not products:
+                continue
+            product_list = []  # Initialize a list to hold product details for this item
+            for product in products[:5]:  # Limit to first 5 products for brevity
+                name = product.get("name")  # Extract product name
+                retail_price = product.get("price", {}).get("amountRelevantDisplay")  # Extract price display
+                product_list.append({
+                    "name": name,
+                    "retail_price": retail_price
+                })
+            # Map the missing item to its list of products under Aldi
+            stores_data["Aldi"][item] = product_list  # ADDED: Assign product list for this missing item
+
+    # import json
+    # with open("output.txt", "w") as file:
+    #     json.dump(stores_data, file, indent=4)
 
 
 
