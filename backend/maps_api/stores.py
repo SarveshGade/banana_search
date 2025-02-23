@@ -17,10 +17,6 @@ def geocode_address(address: str, api_key: str):
     response = requests.get(geocode_url, params=params)
     data = response.json()
 
-    import json
-    with open("output.txt", 'w') as file:
-        json.dump(data, file, indent=4)
-
     address_components = data["results"][0]["address_components"]
     zipcode = ""
     for element in address_components:
