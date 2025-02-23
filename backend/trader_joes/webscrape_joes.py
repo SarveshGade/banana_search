@@ -132,22 +132,12 @@ def search_products(store_code: str, search_term: str, page_size: int = 15, curr
 def get_results(store_address, search_term):
     try:
         store_code = get_store_code(store_address)
-        print(f"Found store code: {store_code}")
         
         products_data = search_products(store_code, search_term)
         items = products_data.get("data", {}).get("products", {}).get("items", [])
         
         # Filter the items so that only those with the keyword in the name are kept.
         filtered_items = [item for item in items if matches_keyword(item.get("name", ""), search_term)]
-        
-        if filtered_items:
-            print(f"Products found for '{search_term}' at store {store_code}:")
-            for item in filtered_items:
-                name = item.get("name")
-                price = item.get("retail_price")
-                print(f"Name: {name} | Price: {price}")
-        else:
-            print(f"No products found for '{search_term}' at store {store_code} that match the keyword.")
             
         return filtered_items
     

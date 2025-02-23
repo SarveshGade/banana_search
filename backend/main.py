@@ -85,7 +85,6 @@ async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...), 
     if trader_joes_store:
         # For each missing ingredient (search term)
         stores_data["Trader Joe's"] = {}
-        print("TRADER JOES")
         for item in missing_items:
             
             # Get products from Trader Joe's using your custom function.
@@ -110,7 +109,6 @@ async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...), 
             stores_data["Trader Joe's"][item] = product_list
 
     # Search in Aldi
-    print("ALDI")
     stores_data["Aldi"] = {}  # Initialize Aldi key in our results
     for item in missing_items:  # For each missing ingredient
         # Retrieve Aldi products for the given address and search term
