@@ -101,13 +101,17 @@ def get_aldi_products(address, keyword):
         results = search_aldi_products(store_id, keyword)
         products = results.get("data", [])
         
-        
         if not products:
             print("No products found.")
-            return None
+            return
         
-        return products
-        
+        print("Products found:")
+        for product in products:
+            name = product.get("name", "Unnamed product")
+            price_info = product.get("price", {})
+            price_display = price_info.get("amountRelevantDisplay", "N/A")
+            print(f"{name} - Price: {price_display}")
+            
     except Exception as e:
         print("Error:", e)
 
@@ -116,4 +120,4 @@ if __name__ == "__main__":
 
     keyword = "tortilla"
 
-    get_aldi_products(address, "tomato")
+    get_aldi_products(address, "tortilla")
