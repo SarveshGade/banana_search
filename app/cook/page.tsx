@@ -1,115 +1,197 @@
-"use client"
+"use client";
 
-import type React from "react"
+import React, { useState, type ChangeEvent } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Banana, Camera, FileText, ShoppingCart, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Banana, Camera, ArrowRight } from "lucide-react"
+export default function BananaSearch() {
+  const [recipeInput, setRecipeInput] = useState("");
+  const [recipePDF, setRecipePDF] = useState<File | null>(null);
+  const [fridgeImage, setFridgeImage] = useState<File | null>(null);
+  const [existingIngredients, setExistingIngredients] = useState("");
+  const [recipeOutput, setRecipeOutput] = useState("");
+  const [missingIngredients, setMissingIngredients] = useState<string[]>([]);
+  const router = useRouter();
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+  const handleRecipeInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setRecipeInput(e.target.value);
+  };
 
-export default function Cook() {
-  const [step, setStep] = useState(1)
-  const [fridgeImage, setFridgeImage] = useState<string | null>(null)
-  const [recipe, setRecipe] = useState("")
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFridgeImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+  const handleRecipePDFUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setRecipePDF(e.target.files[0]);
     }
-  }
+  };
 
-  const handleRecipeSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle recipe selection logic here
-    console.log("Selected recipe:", recipe)
-    setStep(3)
-  }
+  const handleFridgeImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFridgeImage(e.target.files[0]);
+    }
+  };
+
+  const handleExistingIngredientsChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setExistingIngredients(e.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Log the form data for debugging
+    console.log({
+      recipeInput,
+      recipePDF,
+      fridgeImage,
+      existingIngredients,
+    });
+
+    // Simulate a call to your backend API that analyzes the data.
+    // In a real implementation, you'd send the form data via fetch or axios.
+    // For demonstration, we'll use a timeout to simulate an async call.
+    setTimeout(() => {
+      // Example response from backend:
+      const generatedRecipe =
+        "This is the generated recipe based on your inputs. Enjoy your meal!";
+      const missing = ["Tomatoes", "Basil", "Olive Oil"];
+
+      setRecipeOutput(generatedRecipe);
+      setMissingIngredients(missing);
+    }, 1500);
+  };
+
+  const handleCreateShoppingCart = () => {
+    // You might navigate to the shopping cart page
+    router.push("/shop");
+  };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-yellow-50">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-yellow-400">
         <Link className="flex items-center justify-center" href="/dashboard">
           <Banana className="h-6 w-6 mr-2 text-yellow-900" />
           <span className="font-bold text-yellow-900">Banana Search</span>
         </Link>
       </header>
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-yellow-900 mb-8 text-center">Let's Cook!</h1>
-        {step === 1 && (
-          <div className="max-w-md mx-auto text-center">
-            <div className="mb-4 p-8 bg-yellow-100 rounded-lg flex flex-col items-center justify-center">
-              {fridgeImage ? (
-                <img
-                  src={fridgeImage || "/placeholder.svg"}
-                  alt="Fridge contents"
-                  className="max-w-full h-auto rounded-lg"
-                />
-              ) : (
-                <Camera className="w-24 h-24 text-yellow-600" />
+
+      <main className="flex-grow container mx-auto px-4 py-8 flex flex-col items-center">
+        {/* Banana Logo and Title */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative w-32 h-16">
+            <img
+              src="https://static.vecteezy.com/system/resources/thumbnails/009/343/861/small/banana-is-a-yellow-fruit-free-png.png"
+              alt="Banana Logo"
+              className="object-contain w-full h-full"
+            />
+          </div>
+          <h1 className="text-4xl font-bold mt-1 text-red-500">Let's Cook</h1>
+        </div>
+
+        <form onSubmit={handleSubmit} className="w-full max-w-2xl">
+          <div className="bg-yellow-200 p-6 rounded-lg shadow-md space-y-4">
+            <div className="flex items-center space-x-2">
+              <Input
+                id="recipe"
+                placeholder="Enter your desired dish here... (or a pdf of your recipe!)"
+                value={recipeInput}
+                onChange={handleRecipeInputChange}
+                className="flex-grow bg-white"
+              />
+              <Input
+                id="recipe-pdf"
+                type="file"
+                accept=".pdf"
+                onChange={handleRecipePDFUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById("recipe-pdf")?.click()}
+                className="whitespace-nowrap"
+              >
+                <FileText className="mr-2 h-4 w-4" /> Upload PDF
+              </Button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Input
+                id="existing-ingredients"
+                placeholder="Upload an image of your fridge! Fill in any other ingredients too..."
+                value={existingIngredients}
+                onChange={handleExistingIngredientsChange}
+                className="flex-grow bg-white"
+              />
+              <Input
+                id="fridge-image"
+                type="file"
+                accept="image/*"
+                onChange={handleFridgeImageUpload}
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById("fridge-image")?.click()}
+                className="whitespace-nowrap"
+              >
+                <Camera className="mr-2 h-4 w-4" /> Upload Image
+              </Button>
+            </div>
+
+            {/* Display uploaded file names */}
+            <div className="space-y-1">
+              {recipePDF && (
+                <p className="text-sm text-gray-600">
+                  Recipe PDF: {recipePDF.name}
+                </p>
+              )}
+              {fridgeImage && (
+                <p className="text-sm text-gray-600">
+                  Fridge Image: {fridgeImage.name}
+                </p>
               )}
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="fridge-photo"
-            />
-            <label htmlFor="fridge-photo">
-              <Button className="bg-yellow-500 text-yellow-900 hover:bg-yellow-600 cursor-pointer">
-                Take a Picture of Your Fridge
-              </Button>
-            </label>
-            {fridgeImage && (
-              <Button onClick={() => setStep(2)} className="mt-4 bg-yellow-500 text-yellow-900 hover:bg-yellow-600">
-                Next <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        )}
-        {step === 2 && (
-          <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-semibold text-yellow-900 mb-4">What would you like to cook?</h2>
-            <form onSubmit={handleRecipeSubmit} className="space-y-4">
-              <Input
-                type="text"
-                value={recipe}
-                onChange={(e) => setRecipe(e.target.value)}
-                placeholder="Enter a recipe or dish name"
-                required
-                className="w-full"
-              />
-              <Button type="submit" className="w-full bg-yellow-500 text-yellow-900 hover:bg-yellow-600">
-                Find Recipe
-              </Button>
-            </form>
-          </div>
-        )}
-        {step === 3 && (
-          <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-semibold text-yellow-900 mb-4">Grocery List for {recipe}</h2>
-            {/* This is where you'd typically fetch and display the grocery list */}
-            <p className="text-yellow-700 mb-4">Here's what you need to buy for your recipe:</p>
-            <ul className="list-disc list-inside text-yellow-700 mb-4">
-              <li>Ingredient 1</li>
-              <li>Ingredient 2</li>
-              <li>Ingredient 3</li>
-            </ul>
-            <Button className="w-full bg-yellow-500 text-yellow-900 hover:bg-yellow-600">
-              <Link href="/shop">Go to Shopping List</Link>
+
+            <Button
+              type="submit"
+              className="w-full bg-red-400 hover:bg-red-500 text-yellow-900 font-bold"
+            >
+              Analyze Recipe and Fridge
             </Button>
+          </div>
+        </form>
+
+        {/* Output Bubbles */}
+        {recipeOutput && (
+          <div className="mt-8 w-full max-w-2xl">
+            <div className="bg-green-100 p-6 rounded-lg shadow-md mb-4">
+              <h2 className="text-2xl font-bold text-green-800 mb-2">
+                Generated Recipe
+              </h2>
+              <p className="text-green-700">{recipeOutput}</p>
+            </div>
+            {missingIngredients.length > 0 && (
+              <div className="bg-blue-100 p-6 rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold text-blue-800 mb-2">
+                  Missing Ingredients
+                </h2>
+                <ul className="list-disc list-inside text-blue-700">
+                  {missingIngredients.map((ingredient, index) => (
+                    <li key={index}>{ingredient}</li>
+                  ))}
+                </ul>
+                <Button
+                  onClick={handleCreateShoppingCart}
+                  className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-yellow-900"
+                >
+                  Create Shopping Cart
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </main>
     </div>
-  )
+  );
 }
-
