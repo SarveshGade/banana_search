@@ -1,51 +1,60 @@
-import requests
-import json
+from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.responses import JSONResponse
+from dotenv import load_dotenv
+import os
+import base64
+import io
+from PIL import Image
+from openai import OpenAI
+from kroger.api_fetch import get_access_token, search_products, get_store_id
+from maps_api.stores import get_stores_by_address
+from trader_joes.webscrape_joes import get_results
+from aldi.webscrape_aldi import get_aldi_products
 
-# Replace with your Langflow base URL and flow ID
-LANGFLOW_URL = "https://api.langflow.astra.datastax.com"
-FLOW_ID = "a430cc57-06bb-4c11-be39-d3d4de68d2c4"  # Use your actual flow ID
+load_dotenv()
 
-# -----------------------------
-# Step 1: Upload the image file
-# -----------------------------
-upload_url = f"{LANGFLOW_URL}/api/v1/files/upload/{FLOW_ID}"
+app = FastAPI()
 
-# Make sure the file exists and the path is correct
-image_file_path = "cv/frij.jpg"  # Replace with your file path
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+client_id = os.getenv("KROGER_CLIENT_ID")
+client_secret = os.getenv("KROGER_CLIENT_SECRET")
 
-with open(image_file_path, "rb") as file_obj:
-    # requests will set the correct multipart/form-data header automatically
-    response = requests.post(upload_url, files={"file": file_obj})
+# Helper function to encode images
+def encode_image(image):
+    return base64.b64encode(image).decode('utf-8')
 
-# Check the upload response
-upload_response = response.json()
-print("Upload response:", json.dumps(upload_response, indent=2))
+@app.post("/analyze")
+async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...)):
+    image_bytes = await image.read()
+    base64_image = encode_image(image_bytes)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a tool which analyzes images of fridges. Given the image, and an input recipe, please tell me which items needed for the recipe are missing."},
+            {"role": "user", "content": [
+                {"type": "text", "text": f"Return what is missing from the fridge that is needed in {recipe}. Return output as the following: a word list of items, separated by commas. DO NOT provide any other text or output. ONLY a word list."},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
+            ]}
+        ],
+        temperature=0.0,
+    )
+    missing_items = response.choices[0].message.content.strip().split(",")
+    access_token = get_access_token(client_id, client_secret)
+    address = "3871 Peachtree Rd NE, Brookhaven, GA 30319"
+    store_list = get_stores_by_address(address)
+    
+    stores_data = {}
+    kroger_store = next((store for store in store_list if "Kroger" in store["name"]), None)
+    if kroger_store:
+        kroger_store_id = get_store_id(kroger_store, access_token)
+        stores_data["Kroger"] = {item: search_products(kroger_store_id, item, access_token) for item in missing_items}
 
-# The response should include a file_path like:
-# "file_path": "a430cc57-06bb-4c11-be39-d3d4de68d2c4/2024-11-27_14-47-50_image-file.png"
-file_path_value = upload_response.get("file_path")
-if not file_path_value:
-    raise ValueError("File upload did not return a valid file_path.")
+    # Search in Trader Joe's
+    trader_joes_store = next((store for store in store_list if "Trader Joe's" in store["name"]), None)
+    if trader_joes_store:
+        stores_data["Trader Joe's"] = {item: get_results(trader_joes_store, item) for item in missing_items}
 
-# ------------------------------------------------
-# Step 2: Run the flow, passing the file reference
-# ------------------------------------------------
-run_url = f"{LANGFLOW_URL}/api/v1/run/{FLOW_ID}?stream=false"
+    # Search in Aldi
+    stores_data["Aldi"] = {item: get_aldi_products(address, item) for item in missing_items}
 
-# Create the payload with tweaks; update the component name if needed.
-payload = {
-    "output_type": "chat",
-    "input_type": "chat",
-    "tweaks": {
-        "ChatInput-b67sL": {
-            "files": file_path_value,
-            "input_value": "what do you see?"
-        }
-    }
-}
-
-headers = {"Content-Type": "application/json"}
-
-# Send the POST request to run the flow
-response_run = requests.post(run_url, headers=headers, json=payload)
-print("Run response:", json.dumps(response_run.json(), indent=2))
+    return JSONResponse(content={"missing_items": missing_items, "stores": stores_data})

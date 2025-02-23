@@ -6,6 +6,7 @@ from openai import OpenAI
 from kroger.api_fetch import get_access_token, search_products, get_store_id
 from maps_api.stores import get_stores_by_address
 from trader_joes.webscrape_joes import get_results
+from aldi.webscrape_aldi import get_aldi_products
 
 load_dotenv()
 key = os.getenv('OPENAI_API_KEY')
@@ -56,8 +57,11 @@ if image_file and user_message:
     access_token = get_access_token(client_id, client_secret)
 
     # Step 2: Get Nearby Stores (Google Maps API)
-    address = "3871 Peachtree Rd NE, Brookhaven GA 30319"
+    address = "3871 Peachtree Rd NE, Brookhaven, GA 30319"
     store_list = get_stores_by_address(address)
+    
+    import pprint
+    pprint.pprint(store_list)
 
     # Step 3: Find the Kroger Store from the List
     kroger_store = None
@@ -108,6 +112,21 @@ if image_file and user_message:
                     st.markdown(f"- **{product_name}** - ${price}")
             else:
                 st.markdown(f"**{item}:** No products found.")
+    
+    st.subheader("Available Items at Aldi:")
+    for item in missing_items:
+        products = get_aldi_products(address, item)
+        if products:
+            st.markdown(f"**{item}:**")
+            for product in products[:5]:
+                name = product.get("name", "Unnamed product")
+                price_info = product.get("price", {})
+                price_display = price_info.get("amountRelevantDisplay", "N/A")
+                st.markdown(f"- **{name}** - ${price}")
+                print(f"{name} - Price: {price_display}")
+        else:
+            st.markdown(f"**{item}:** No products found.")
+            
         
 
                 

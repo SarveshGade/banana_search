@@ -16,9 +16,16 @@ def geocode_address(address: str, api_key: str):
     }
     response = requests.get(geocode_url, params=params)
     data = response.json()
+
+    address_components = data["results"][0]["address_components"]
+    zipcode = ""
+    for element in address_components:
+        if element["types"][0] == "postal_code":
+            zipcode = element["long_name"]
+    
     if data["status"] == "OK":
         location = data["results"][0]["geometry"]["location"]
-        return location["lat"], location["lng"]
+        return location["lat"], location["lng"], zipcode
     else:
         raise Exception(f"Geocoding API error: {data['status']}")
 
@@ -37,11 +44,14 @@ def search_grocery_stores(lat: float, lng: float, api_key: str, radius: int):
     }
     response = requests.get(places_url, params=params)
     data = response.json()
+    
     if data["status"] == "OK" or data["status"] == "ZERO_RESULTS":
         results = [
             place for place in data["results"]
             if "gas_station" not in place.get("types", [])
         ]
+        # import pprint
+        # pprint.pprint(results)
         return results
     else:
         raise Exception("Places API error: " + data["status"])
@@ -88,6 +98,7 @@ def filter_by_travel_time(origin: str, destinations: list, max_duration_minutes:
     }
     response = requests.get(url, params=params)
     data = response.json()
+
     if data["status"] != "OK":
         raise Exception("Distance Matrix API error: " + data["status"])
     
@@ -124,6 +135,10 @@ def filter_duplicates_by_brand(stores: list):
             filtered[brand] = store
     return list(filtered.values())
 
+def get_zipcode(address: str):
+    API_KEY = maps_key  # Use the API key from the .env file
+    lat, lng, zipcode = geocode_address(address, API_KEY)
+    return zipcode
 
 def get_stores_by_address(address: str):
     """
@@ -134,7 +149,7 @@ def get_stores_by_address(address: str):
       - Returns a list of store dictionaries.
     """
     API_KEY = maps_key  # Use the API key from the .env file
-    lat, lng = geocode_address(address, API_KEY)
+    lat, lng, zipcode = geocode_address(address, API_KEY)
     origin_str = f"{lat},{lng}"
     
     radius = 5000
@@ -150,6 +165,7 @@ def get_stores_by_address(address: str):
             radius -= 5000
             stores = search_grocery_stores(lat, lng, API_KEY, radius)
             stores += search_grocery_keyword(lat, lng, API_KEY, radius)
+        
             filtered_stores = filter_by_travel_time(origin_str, stores, max_duration_minutes=20)
             final_stores = filter_duplicates_by_brand(filtered_stores)
             break
