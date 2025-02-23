@@ -95,7 +95,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
                     "price": price
                 })
             # Map the missing item to its list of products in the Kroger data
-            stores_data["Kroger"][item] = temp
+            stores_data["Kroger"][item] = sorted(temp, key = lambda x: x['price'])[0]
 
     
 
@@ -125,7 +125,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
                 })
             
             # Map the missing item to its product list in the Trader Joe's section
-            stores_data["Trader Joe's"][item] = product_list
+            stores_data["Trader Joe's"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]
 
     zipcode = get_zipcode(address)
 
@@ -181,7 +181,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
                     "retail_price": retail_price
                 })
             # Map the missing item to its list of products under Aldi
-            stores_data["Aldi"][item] = product_list  # ADDED: Assign product list for this missing item
+            stores_data["Aldi"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]  # ADDED: Assign product list for this missing item
 
     # import json
     # with open("output.txt", "w") as file:
@@ -189,3 +189,8 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
 
 
     return JSONResponse(content={"ingredient_list": ingredient_list, "stores": stores_data})
+
+
+# if __name__ == "__main__":
+    
+#     api_calls(["carrots", "tortilla", "eggs", "ham", "cheese"], "3871 Peachtree Rd NE, Brookhaven, GA 30319")
