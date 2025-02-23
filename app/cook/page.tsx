@@ -67,13 +67,15 @@ export default function BananaSearch() {
         method: "POST",
         body: formData,
       });
+      console.log("request finished")
       if (!response.ok) {
         throw new Error("Failed to analyze image");
       }
       const data = await response.json();
+      console.log("data received", data)
   
       setTimeout(() => {
-        const generatedRecipe = data.generated_recipe;
+        const generatedRecipe = data.recipe;
         const missing = data.missing_items;
   
         setRecipeOutput(generatedRecipe);
