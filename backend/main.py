@@ -24,7 +24,7 @@ def encode_image(image):
     return base64.b64encode(image).decode('utf-8')
 
 @app.post("/analyze")
-async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...)):
+async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...), str_address: str = Form(...)):
     image_bytes = await image.read()
     base64_image = encode_image(image_bytes)
     response = client.chat.completions.create(
@@ -40,7 +40,7 @@ async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...)):
     )
     missing_items = response.choices[0].message.content.strip().split(",")
     access_token = get_access_token(client_id, client_secret)
-    address = "3871 Peachtree Rd NE, Brookhaven, GA 30319"
+    address = str_address
     store_list = get_stores_by_address(address)
     
     stores_data = {}
