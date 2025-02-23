@@ -95,6 +95,17 @@ def search_products(store_id, keyword, token):
     response = requests.get(products_url, headers=headers, params=params, timeout=10)
     response.raise_for_status()
     data = response.json()
+
+    products = data.get("data", [])
+    print("\nProducts found:")
+    for product in products:
+        product_name = product.get("description")
+        product_id = product.get("productId")
+        # Assume the product's first item holds the pricing info
+        price = None
+        if product.get("items") and len(product["items"]) > 0:
+            price = product["items"][0].get("price", {}).get("regular")
+        print(f"Product Name: {product_name}, Price: {price}")
     return data.get("data", [])
 
 if __name__ == "__main__":
