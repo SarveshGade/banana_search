@@ -1,0 +1,69 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { Plus } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ShoppingListItem } from "@/components/shopping-list-item"
+
+export default function Shop() {
+  const [items, setItems] = useState<Array<{ name: string; quantity: number }>>([])
+  const [newItem, setNewItem] = useState("")
+
+  const addItem = () => {
+    if (newItem.trim()) {
+      setItems([...items, { name: newItem.trim(), quantity: 1 }])
+      setNewItem("")
+    }
+  }
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index))
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <header className="px-4 lg:px-6 h-14 flex items-center bg-yellow-400">
+        <Link className="flex items-center justify-center" href="/dashboard">
+          <span className="font-bold text-yellow-900">Banana Search</span>
+        </Link>
+      </header>
+      <main className="flex-1 container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-yellow-900 mb-8 text-center">Shopping List</h1>
+        <div className="max-w-md mx-auto">
+          <div className="flex mb-4">
+            <Input
+              type="text"
+              placeholder="Add an item"
+              value={newItem}
+              onChange={(e) => setNewItem(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && addItem()}
+              className="flex-grow mr-2"
+            />
+            <Button onClick={addItem} className="bg-yellow-500 text-yellow-900 hover:bg-yellow-600">
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          <ul className="space-y-2">
+            {items.map((item, index) => (
+              <ShoppingListItem
+                key={index}
+                item={item.name}
+                quantity={item.quantity}
+                onRemove={() => removeItem(index)}
+                onUpdateQuantity={(newQuantity) => {
+                  const newItems = [...items]
+                  newItems[index].quantity = newQuantity
+                  setItems(newItems)
+                }}
+              />
+            ))}
+          </ul>
+        </div>
+      </main>
+    </div>
+  )
+}
+
