@@ -59,7 +59,7 @@ export default function BananaSearch() {
       return;
     }
     const formData = new FormData();
-    formData.append("recipe", recipeInput);
+    formData.append("dish", recipeInput);
     formData.append("image", fridgeImage);
     formData.append("address", address);
     try {
