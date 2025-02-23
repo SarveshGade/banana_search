@@ -1,23 +1,35 @@
-"use client"
+"use client";
 
-import type React from "react"
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Banana } from "lucide-react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Banana } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle login logic here
-    console.log("Login with:", email, password)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("Error logging in:", error.message);
+      // Optionally, show error feedback to the user
+    } else {
+      console.log("Login successful!", data);
+      // Redirect to the dashboard after successful login
+      router.push("/dashboard");
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -70,6 +82,5 @@ export default function Login() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-

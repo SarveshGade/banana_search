@@ -39,7 +39,7 @@ export default function Home() {
               </div>
               <div className="space-x-4">
                 <Button asChild className="bg-yellow-500 text-yellow-900 hover:bg-yellow-600">
-                  <Link href="/dashboard">
+                  <Link href="/signup">
                     Start Searching <Search className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
