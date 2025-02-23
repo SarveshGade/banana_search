@@ -78,7 +78,7 @@ export default function BananaSearch() {
         const generatedRecipe = data.recipe;
         const missing = data.missing_items;
   
-        setRecipeOutput(generatedRecipe);
+        setRecipeOutput("generatedRecipe");
         setMissingIngredients(missing);
       }, 1500);
     } catch (error) {
