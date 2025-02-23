@@ -16,6 +16,7 @@ export default function BananaSearch() {
   const [missingIngredients, setMissingIngredients] = useState<string[]>([]);
   const router = useRouter();
 
+
   const handleRecipeInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setRecipeInput(e.target.value);
   };
@@ -61,6 +62,8 @@ export default function BananaSearch() {
 
       const data = await response.json();
       setMissingIngredients(data.missing_items);
+
+      setRecipeOutput(JSON.stringify(data, null, 4));
     } catch (error) {
       console.error("Error analyzing image:", error);
     }
@@ -156,6 +159,15 @@ export default function BananaSearch() {
             </Button>
           </div>
         </form>
+
+        {recipeOutput && (
+          <div className="w-full max-w-2xl mt-8">
+            <h2 className="text-2xl font-bold mb-4 text-blue-900">Analysis Output</h2>
+            <pre className="bg-gray-100 p-4 rounded-lg text-sm text-blue-700 overflow-x-auto">
+              {recipeOutput}
+            </pre>
+          </div>
+        )}
 
         {missingIngredients.length > 0 && (
           <div className="mt-8 w-full max-w-2xl">

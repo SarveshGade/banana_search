@@ -13,7 +13,17 @@ from aldi.webscrape_aldi import get_aldi_products
 
 load_dotenv()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or restrict to your frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 client_id = os.getenv("KROGER_CLIENT_ID")
@@ -47,17 +57,79 @@ async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...), 
     kroger_store = next((store for store in store_list if "Kroger" in store["name"]), None)
     if kroger_store:
         kroger_store_id = get_store_id(kroger_store, access_token)
-        print("KROGER")
-        stores_data["Kroger"] = {item: search_products(kroger_store_id, item, access_token) for item in missing_items}
+        
+        stores_data["Kroger"] = {}
+        for item in missing_items:
+            # Get the list of products matching this missing item from Kroger
+            products = search_products(kroger_store_id, item, access_token)
+            temp = []  # We'll store product details in a list
+            for product in products[:5]:
+                # Extract product name (assuming it's under the key "description")
+                product_name = product.get("description")
+                price = None
+                # Extract the price if available
+                if product.get("items") and len(product["items"]) > 0:
+                    price = product["items"][0].get("price", {}).get("regular")
+                # Append a dictionary with the product's name and price
+                temp.append({
+                    "name": product_name,
+                    "price": price
+                })
+            # Map the missing item to its list of products in the Kroger data
+            stores_data["Kroger"][item] = temp
+
+    
 
     # Search in Trader Joe's
     trader_joes_store = next((store for store in store_list if "Trader Joe's" in store["name"]), None)
     if trader_joes_store:
+        # For each missing ingredient (search term)
+        stores_data["Trader Joe's"] = {}
         print("TRADER JOES")
-        stores_data["Trader Joe's"] = {item: get_results(trader_joes_store, item) for item in missing_items}
+        for item in missing_items:
+            
+            # Get products from Trader Joe's using your custom function.
+            # get_results is assumed to return a list of products for the given store and search term.
+            products = get_results(trader_joes_store, item)
+            
+            product_list = []  # Will store the processed product info for this missing item
+            for product in products[:5]:
+                # Extract product details. Adjust key names if needed.
+                product_name = product.get("name")  # e.g., "TORTILLAS SONORA STYLE FLOUR"
+                # Depending on the API, the price might be nested in a dictionary.
+                # Here we try to extract "retail_price" or fallback to another key.
+                retail_price = product.get("retail_price") or product.get("price", {}).get("amountRelevantDisplay")
+                
+                # Append the product details to the list
+                product_list.append({
+                    "name": product_name,
+                    "retail_price": retail_price
+                })
+            
+            # Map the missing item to its product list in the Trader Joe's section
+            stores_data["Trader Joe's"][item] = product_list
 
     # Search in Aldi
-    print ("ALDI")
-    stores_data["Aldi"] = {item: get_aldi_products(address, item) for item in missing_items}
+    print("ALDI")
+    stores_data["Aldi"] = {}  # Initialize Aldi key in our results
+    for item in missing_items:  # For each missing ingredient
+        # Retrieve Aldi products for the given address and search term
+        products = get_aldi_products(address, item)
+        product_list = []  # Initialize a list to hold product details for this item
+        for product in products[:5]:  # Limit to first 5 products for brevity
+            name = product.get("name")  # Extract product name
+            retail_price = product.get("price", {}).get("amountRelevantDisplay")  # Extract price display
+            product_list.append({
+                "name": name,
+                "retail_price": retail_price
+            })
+        # Map the missing item to its list of products under Aldi
+        stores_data["Aldi"][item] = product_list  # ADDED: Assign product list for this missing item
+
+    
+    import json
+    with open("output.txt", "w") as file:
+        json.dump(stores_data, file, indent=4)
+
 
     return JSONResponse(content={"missing_items": missing_items, "stores": stores_data})

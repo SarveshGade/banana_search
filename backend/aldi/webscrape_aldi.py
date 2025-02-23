@@ -111,6 +111,8 @@ def get_aldi_products(address, keyword):
             price_info = product.get("price", {})
             price_display = price_info.get("amountRelevantDisplay", "N/A")
             print(f"{name} - Price: {price_display}")
+
+        return products
             
     except Exception as e:
         print("Error:", e)
