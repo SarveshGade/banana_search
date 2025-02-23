@@ -43,11 +43,12 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
         messages=[
             {"role": "system", "content": "You are a tool which given a dish to make, generates a detailed recipe, with an ingredient list followed by steps to make the dish."},
             {"role": "user", "content": [
-                {"type": "text", "text": f"Generate Recipe for {dish}. Return output as a JSON with an ingredient list, followed by recipe steps."},
+                {"type": "text", "text": f"Generate Recipe for {dish}. Return output as an array with an ingredient list, followed by recipe steps."},
             ]}
         ],
         temperature=0.0,
     )
+    recipe = recipe.choices[0].message.content.strip()
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
@@ -180,5 +181,4 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
     #     json.dump(stores_data, file, indent=4)
 
 
-
-    return JSONResponse(content={"dish":dish, "missing_items": missing_items, "stores": stores_data})
+    return JSONResponse(content={"recipe": recipe, "missing_items": missing_items, "stores": stores_data})

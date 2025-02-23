@@ -17,6 +17,8 @@ export default function BananaSearch() {
   const [missingIngredients, setMissingIngredients] = useState<string[]>([]);
   const [address, setAddress] = useState(""); // New state for the user's address
   const router = useRouter();
+  let ingredients: string[] = [];
+  let steps: string[] = [];
 
   // Fetch the session on component mount and extract the address from user metadata
   useEffect(() => {
@@ -67,7 +69,6 @@ export default function BananaSearch() {
         method: "POST",
         body: formData,
       });
-      console.log("request finished")
       if (!response.ok) {
         throw new Error("Failed to analyze image");
       }
@@ -75,19 +76,27 @@ export default function BananaSearch() {
       console.log("data received", data)
   
       setTimeout(() => {
-        const generatedRecipe = data.recipe;
+        const generatedRecipe = JSON.parse(data.recipe);
         const missing = data.missing_items;
+
+        ingredients = generatedRecipe[0]?.ingredient_list || [];
+        steps = generatedRecipe[1]?.recipe_steps || [];
+        console.log(ingredients);
+        console.log(steps);
+        console.log(missing);
+        const finalRecipe = `Ingredients:\n${ingredients.join("\n")}\n\nSteps:\n${steps.join("\n")}`;
   
-        setRecipeOutput("generatedRecipe");
+        setRecipeOutput(finalRecipe);
         setMissingIngredients(missing);
       }, 1500);
     } catch (error) {
-      console.error("Error analyzing image:", error);
+      console.error("Error generating output:", error);
     }
   };
   
 
   const handleCreateShoppingCart = () => {
+
     router.push("/shop");
   };
 
@@ -189,8 +198,28 @@ export default function BananaSearch() {
           <div className="mt-8 w-full max-w-2xl">
             <div className="bg-green-100 p-6 rounded-lg shadow-md mb-4">
               <h2 className="text-2xl font-bold text-green-800 mb-2">Generated Recipe</h2>
-              <p className="text-green-700">{recipeOutput}</p>
+              
+              {/* Ingredients List */}
+              <div>
+                <h3 className="text-xl font-semibold">Ingredients</h3>
+                <ul className="list-disc list-inside text-green-700">
+                  {ingredients.map((ingredient, index) => (
+                    <li key={index}>{ingredient}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Recipe Steps */}
+              <div className="mt-4">
+                <h3 className="text-xl font-semibold">Recipe Steps</h3>
+                <ol className="list-decimal list-inside text-green-700">
+                  {steps.map((step, index) => (
+                    <li key={index}>{step}</li>
+                  ))}
+                </ol>
+              </div>
             </div>
+            
             {missingIngredients.length > 0 && (
               <div className="bg-blue-100 p-6 rounded-lg shadow-md">
                 <h2 className="text-2xl font-bold text-blue-800 mb-2">Missing Ingredients</h2>
