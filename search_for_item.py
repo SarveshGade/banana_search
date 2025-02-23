@@ -1,6 +1,6 @@
 # main.py
 from maps_api import stores  # Import the module that contains your functions
-from trader_joes import webscrape
+from trader_joes import webscrape_joes
 
 def main():
     # Provide the store address and search term.
@@ -24,7 +24,7 @@ def main():
         print("Couldn't find any trader joes nearby.")
 
     else:
-        webscrape.get_results(store_address, search_term)
+        webscrape_joes.get_results(store_address, search_term)
     
 
 if __name__ == "__main__":
