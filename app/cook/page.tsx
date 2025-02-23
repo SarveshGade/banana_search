@@ -15,10 +15,10 @@ export default function BananaSearch() {
   const [existingIngredients, setExistingIngredients] = useState("");
   const [recipeOutput, setRecipeOutput] = useState("");
   const [missingIngredients, setMissingIngredients] = useState<string[]>([]);
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [steps, setSteps] = useState<string[]>([]);
   const [address, setAddress] = useState(""); // New state for the user's address
   const router = useRouter();
-  let ingredients: string[] = [];
-  let steps: string[] = [];
 
   // Fetch the session on component mount and extract the address from user metadata
   useEffect(() => {
@@ -79,14 +79,13 @@ export default function BananaSearch() {
         const generatedRecipe = JSON.parse(data.recipe);
         const missing = data.missing_items;
 
-        ingredients = generatedRecipe[0]?.ingredient_list || [];
-        steps = generatedRecipe[1]?.recipe_steps || [];
-        console.log(ingredients);
-        console.log(steps);
-        console.log(missing);
+        const parsedIngredients = generatedRecipe[0]?.ingredient_list || [];
+        const parsedSteps = generatedRecipe[1]?.recipe_steps || [];
         const finalRecipe = `Ingredients:\n${ingredients.join("\n")}\n\nSteps:\n${steps.join("\n")}`;
   
         setRecipeOutput(finalRecipe);
+        setIngredients(parsedIngredients);
+        setSteps(parsedSteps);
         setMissingIngredients(missing);
       }, 1500);
     } catch (error) {
