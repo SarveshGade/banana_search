@@ -148,6 +148,8 @@ def get_results(store_address, search_term):
                 print(f"Name: {name} | Price: {price}")
         else:
             print(f"No products found for '{search_term}' at store {store_code} that match the keyword.")
+            
+        return filtered_items
     
     except Exception as e:
         print("An error occurred:", e)

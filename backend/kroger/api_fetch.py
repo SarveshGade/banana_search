@@ -3,6 +3,7 @@ import base64
 import os
 import sys
 import pandas as pd
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from maps_api import stores
