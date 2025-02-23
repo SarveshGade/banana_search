@@ -68,7 +68,6 @@ export default function BananaSearch() {
     const formData = new FormData();
     formData.append("dish", recipeInput);
     formData.append("image", fridgeImage);
-    formData.append("address", address);
     try {
       const response = await fetch("http://localhost:8000/analyze", {
         method: "POST",

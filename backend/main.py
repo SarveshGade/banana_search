@@ -35,7 +35,7 @@ def encode_image(image):
     return base64.b64encode(image).decode('utf-8')
 
 @app.post("/analyze")
-async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), address: str = Form(...)):
+async def analyze_image(dish: str = Form(...), image: UploadFile = File(...)):
     image_bytes = await image.read()
     base64_image = encode_image(image_bytes)
     recipe = client.chat.completions.create(
@@ -61,6 +61,13 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
         temperature=0.0,
     )
     missing_items = response.choices[0].message.content.strip().split(",")
+    return JSONResponse(content={"recipe": recipe, "missing_items": missing_items})
+    
+    
+    
+    
+@app.post("/groceries")
+async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
     access_token = get_access_token(client_id, client_secret)
     address = address
     store_list = get_stores_by_address(address)
@@ -71,7 +78,7 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
         kroger_store_id = get_store_id(kroger_store, access_token)
         
         stores_data["Kroger"] = {}
-        for item in missing_items:
+        for item in ingredient_list:
             # Get the list of products matching this missing item from Kroger
             products = search_products(kroger_store_id, item, access_token)
             temp = []  # We'll store product details in a list
@@ -97,7 +104,7 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
     if trader_joes_store:
         # For each missing ingredient (search term)
         stores_data["Trader Joe's"] = {}
-        for item in missing_items:
+        for item in ingredient_list:
             
             # Get products from Trader Joe's using your custom function.
             # get_results is assumed to return a list of products for the given store and search term.
@@ -160,7 +167,7 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
     # Search in Aldi
     if aldi_store:
         stores_data["Aldi"] = {}  # Initialize Aldi key in our results
-        for item in missing_items:  # For each missing ingredient
+        for item in ingredient_list:  # For each missing ingredient
             # Retrieve Aldi products for the given address and search term
             products = get_aldi_products(store_id, item)
             if not products:
@@ -181,4 +188,4 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
     #     json.dump(stores_data, file, indent=4)
 
 
-    return JSONResponse(content={"recipe": recipe, "missing_items": missing_items, "stores": stores_data})
+    return JSONResponse(content={"ingredient_list": ingredient_list, "stores": stores_data})

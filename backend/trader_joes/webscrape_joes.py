@@ -138,7 +138,7 @@ def get_results(store_address, search_term):
         
         # Filter the items so that only those with the keyword in the name are kept.
         filtered_items = [item for item in items if matches_keyword(item.get("name", ""), search_term)]
-            
+
         return filtered_items
     
     except Exception as e:
