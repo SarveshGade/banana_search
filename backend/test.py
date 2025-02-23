@@ -1,140 +1,116 @@
-# Note: Replace **<YOUR_APPLICATION_TOKEN>** with your actual Application token
-
-import argparse
-import json
-from argparse import RawTextHelpFormatter
-import requests
-from typing import Optional
-import warnings
-import os
-import langflow
+import streamlit as st 
+import os 
 from dotenv import load_dotenv
-import langchain
-from langflow.load import upload_file
+import base64
+from openai import OpenAI
+from kroger.api_fetch import get_access_token, search_products, get_store_id
+from maps_api.stores import get_stores_by_address
+from trader_joes.webscrape_joes import get_results
+
 load_dotenv()
+key = os.getenv('OPENAI_API_KEY')
+MODEL = 'gpt-4o'
+client = OpenAI(api_key=key)
+client_id = os.getenv("KROGER_CLIENT_ID")
+client_secret = os.getenv("KROGER_CLIENT_SECRET")
+LOCATOR_URL = "https://alphaapi.brandify.com/rest/locatorsearch"
+GRAPHQL_URL = "https://www.traderjoes.com/api/graphql"
+APP_KEY = "8BC3433A-60FC-11E3-991D-B2EE0C70A832"
 
-BASE_API_URL = "https://api.langflow.astra.datastax.com"
-LANGFLOW_ID = "dcbab69c-68d2-4b67-9c89-1b5ec6803b26"
-FLOW_ID = "4576938a-3247-4c2e-b8aa-f57b07ddf280"
-APPLICATION_TOKEN = os.environ.get("APP_TOKEN")
-ENDPOINT = "" # You can set a specific endpoint name in the flow settings
+def encode_image(image):
+    return base64.b64encode(image.read()).decode('utf-8')
 
-# You can tweak the flow by adding a tweaks dictionary
-# e.g {"OpenAI-XXXXX": {"model_name": "gpt-4"}}
-TWEAKS = {
-  "ChatInput-QMZYv": {
-    "background_color": "",
-    "chat_icon": "",
-    "files": "",
-    "sender": "User",
-    "sender_name": "User",
-    "session_id": "",
-    "should_store_message": True,
-    "text_color": ""
-  },
-  "OpenAIModel-HHR0J": {
-    "api_key": "banana_key",
-    "input_value": "",
-    "json_mode": False,
-    "max_tokens": None,
-    "model_kwargs": {},
-    "model_name": "gpt-4o-mini",
-    "openai_api_base": "",
-    "output_schema": {},
-    "seed": 1,
-    "stream": False,
-    "system_message": "",
-    "temperature": 0.1
-  },
-  "Prompt-wyeZn": {
-    "template": "You are an agent that outputs the ingredients that the user does NOT have in their fridge that are required to make the recipe they want. DO NOT list all ingredients. ONLY state the ingredients missing.\n\nExample:\n\nUser: {{recipe}} {{image}}\n\nChat Output: \n\"\n- Chicken\n- Pasta\n-Pasta Sauce\n\""
-  },
-  "ChatOutput-hqW2T": {
-    "background_color": "",
-    "chat_icon": "",
-    "data_template": "{text}",
-    "input_value": "",
-    "sender": "Machine",
-    "sender_name": "AI",
-    "session_id": "",
-    "should_store_message": True,
-    "text_color": ""
-  },
-  "APIRequest-8CZA3": {
-    "body": "{}",
-    "curl": "",
-    "headers": "{}",
-    "method": "GET",
-    "timeout": 5,
-    "urls": ""
-  }
-}
+st.title('Image Analyzer')
 
-def run_flow(message: str,
-  endpoint: str,
-  output_type: str = "chat",
-  input_type: str = "chat",
-  tweaks: Optional[dict] = None,
-  application_token: Optional[str] = None) -> dict:
-    """
-    Run a flow with a given message and optional tweaks.
+# User input for recipe
+user_message = st.text_input("Enter your recipe (e.g., CAKE):")
 
-    :param message: The message to send to the flow
-    :param endpoint: The ID or the endpoint name of the flow
-    :param tweaks: Optional tweaks to customize the flow
-    :return: The JSON response from the flow
-    """
-    api_url = f"{BASE_API_URL}/lf/{LANGFLOW_ID}/api/v1/run/{FLOW_ID}"
+# Image upload
+image_file = st.file_uploader('Upload an image file', type=['png', 'jpg', 'jpeg'])
+if image_file and user_message:
+    st.image(image_file, caption='Uploaded image', use_column_width=True)
 
-    payload = {
-        "input_value": message,
-        "output_type": output_type,
-        "input_type": input_type,
-    }
-    headers = None
-    if tweaks:
-        payload["tweaks"] = tweaks
-    if application_token:
-        headers = {"Authorization": "Bearer " + APPLICATION_TOKEN, "Content-Type": "application/json"}
-    response = requests.post(api_url, json=payload, headers=headers)
-    return response.json()
+    base64_image = encode_image(image_file)
 
-def main():
-    parser = argparse.ArgumentParser(description="""Run a flow with a given message and optional tweaks.
-Run it like: python <your file>.py "your message here" --endpoint "your_endpoint" --tweaks '{"key": "value"}'""",
-        formatter_class=RawTextHelpFormatter)
-    parser.add_argument("message", type=str, help="The message to send to the flow")
-    parser.add_argument("--endpoint", type=str, default=ENDPOINT or FLOW_ID, help="The ID or the endpoint name of the flow")
-    parser.add_argument("--tweaks", type=str, help="JSON string representing the tweaks to customize the flow", default=json.dumps(TWEAKS))
-    parser.add_argument("--application_token", type=str, default=APPLICATION_TOKEN, help="Application Token for authentication")
-    parser.add_argument("--output_type", type=str, default="chat", help="The output type")
-    parser.add_argument("--input_type", type=str, default="chat", help="The input type")
-    parser.add_argument("--upload_file", type=str, help="Path to the file to upload", default=None)
-    parser.add_argument("--components", type=str, help="Components to upload the file to", default=None)
-
-    args = parser.parse_args()
-    try:
-      tweaks = json.loads(args.tweaks)
-    except json.JSONDecodeError:
-      raise ValueError("Invalid tweaks JSON string")
-
-    if args.upload_file:
-        if not upload_file:
-            raise ImportError("Langflow is not installed. Please install it to use the upload_file function.")
-        elif not args.components:
-            raise ValueError("You need to provide the components to upload the file to.")
-        tweaks = upload_file(file_path=args.upload_file, host=BASE_API_URL, flow_id=FLOW_ID, components=args.components, tweaks=tweaks)
-    
-    response = run_flow(
-        message=args.message,
-        endpoint=args.endpoint,
-        output_type=args.output_type,
-        input_type=args.input_type,
-        tweaks=tweaks,
-        application_token=APPLICATION_TOKEN
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "You are a tool which analyzes images of fridges. Given the image, and an input recipe, please tell me which items needed for the recipe are missing."},
+            {"role": "user", "content": [
+                {"type": "text", "text": f"Return what is missing from the fridge that is needed in {user_message}. Return output as the following: a word list of items, separated by commas. DO NOT provide any other text or output. ONLY a word list."},
+                {"type": "image_url", "image_url": {
+                    "url": f"data:image/png;base64,{base64_image}"}
+                }
+            ]}
+        ],
+        temperature=0.0,
     )
+    
+    st.markdown(response.choices[0].message.content)
+    missing_items = response.choices[0].message.content.strip().split(",")
+    print(missing_items)
+    
+    access_token = get_access_token(client_id, client_secret)
+    
+    # Step 1: Get Access Token
+    access_token = get_access_token(client_id, client_secret)
 
-    print(json.dumps(response, indent=2))
+    # Step 2: Get Nearby Stores (Google Maps API)
+    address = "3871 Peachtree Rd NE, Brookhaven GA 30319"
+    store_list = get_stores_by_address(address)
 
-if __name__ == "__main__":
-    main()
+    # Step 3: Find the Kroger Store from the List
+    kroger_store = None
+    for store in store_list:
+        if store["name"] == "Kroger":
+            kroger_store = store
+            break
+
+    if kroger_store:
+        # Step 4: Retrieve the Kroger Store ID
+        kroger_store_id = get_store_id(kroger_store, access_token)
+        print("Kroger Store ID:", kroger_store_id)
+    else:
+        print("No Kroger store found nearby.")
+    
+    
+    st.subheader("Available Items at Kroger:")
+
+    # Loop through each missing item and search in Kroger
+    for item in missing_items:
+        products = search_products(kroger_store_id, item, access_token)
+
+        if products:
+            st.markdown(f"**{item}:**")
+            for product in products[:5]:  # Limit results to top 5
+                product_name = product.get("description", "No Name")
+                price = product["items"][0].get("price", {}).get("regular", "N/A") if product.get("items") else "N/A"
+                st.markdown(f"- **{product_name}** - ${price}")
+        else:
+            st.markdown(f"**{item}:** No products found.")
+          
+    trader_joes_store = None
+    for store in store_list:
+        if "Trader Joe's" in store["name"]:
+            trader_joes_store = store
+            break
+    
+    if trader_joes_store:
+        st.subheader("Available Items at Trader Joe's:")
+        for item in missing_items:
+            products = get_results(trader_joes_store, item)
+
+            if products:
+                st.markdown(f"**{item}:**")
+                for product in products[:5]:  # Limit results to top 5
+                    product_name = product.get("name")
+                    price = product.get("retail_price") if product.get("retail_price") else "N/A"
+                    st.markdown(f"- **{product_name}** - ${price}")
+            else:
+                st.markdown(f"**{item}:** No products found.")
+        
+
+                
+                
+        
+        
