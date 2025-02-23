@@ -38,7 +38,7 @@ export default function Shop() {
 
   const handleGenerateStorePrices = () => {
     localStorage.setItem("shoppingListItems", JSON.stringify(items));
-    router.push("/store_prices");
+    router.push("/storePrices");
   }
 
   return (
