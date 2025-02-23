@@ -4,7 +4,7 @@
 We were inspired to create Banana Search by the everyday challenges of meal planning and grocery shopping. Food prices have skyrocketed in recent years, and we wanted to find a way for users to budget while cooking the food they want. We noticed that many people struggle to figure out what to cook based on what they already have, and often end up overspending or wasting food. By combining smart recipe generation with real-time grocery price comparisons, we envisioned a tool that not only makes meal planning easier but also saves users money and reduces food waste.
 
 ## What It Does
-Generates Recipes:
+### Generates Recipes:
 Users enter a desired dish and receive a detailed recipe, complete with an ingredient list and step-by-step cooking instructions.
 Optimizes Grocery Lists:
 By uploading an image of their fridge, users can quickly identify which ingredients they are missing for the recipe.
