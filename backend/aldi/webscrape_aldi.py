@@ -110,7 +110,6 @@ def get_aldi_products(address, keyword):
             name = product.get("name", "Unnamed product")
             price_info = product.get("price", {})
             price_display = price_info.get("amountRelevantDisplay", "N/A")
-            print(f"{name} - Price: {price_display}")
 
         return products
             
