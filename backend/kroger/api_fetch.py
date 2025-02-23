@@ -71,7 +71,6 @@ def get_store_id(store, token):
         # Pick the first matching store
         store = data["data"][0]
         store_id = store.get("locationId")
-        print(f"Found store: {store.get('name')} with ID: {store_id}")
         return store_id
     else:
         raise Exception("No store found for the provided address.")
@@ -97,7 +96,6 @@ def search_products(store_id, keyword, token):
     data = response.json()
 
     products = data.get("data", [])
-    print("\nProducts found:")
     for product in products:
         product_name = product.get("description")
         product_id = product.get("productId")
@@ -105,7 +103,6 @@ def search_products(store_id, keyword, token):
         price = None
         if product.get("items") and len(product["items"]) > 0:
             price = product["items"][0].get("price", {}).get("regular")
-        print(f"Product Name: {product_name}, Price: {price}")
     return data.get("data", [])
 
 if __name__ == "__main__":
@@ -127,7 +124,6 @@ if __name__ == "__main__":
     try:
         # Step 1: Get the access token
         access_token = get_access_token(client_id, client_secret)
-        print("Access token obtained successfully.")
         
         # Step 2: Get a store ID from the location API using the address
         store_id = get_store_id(store, access_token)
@@ -135,7 +131,6 @@ if __name__ == "__main__":
         # Step 3: Search for products at that store using the products API
         products = search_products(store_id, search_keyword, access_token)
         
-        print("\nProducts found:")
         for product in products:
             product_name = product.get("description")
             product_id = product.get("productId")
@@ -143,7 +138,6 @@ if __name__ == "__main__":
             price = None
             if product.get("items") and len(product["items"]) > 0:
                 price = product["items"][0].get("price", {}).get("regular")
-            print(f"Product Name: {product_name}, Price: {price}")
     
     except Exception as e:
         print("Error:", e)
