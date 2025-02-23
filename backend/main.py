@@ -124,6 +124,8 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
     for item in missing_items:  # For each missing ingredient
         # Retrieve Aldi products for the given address and search term
         products = get_aldi_products(address, item)
+        if not products:
+            continue
         product_list = []  # Initialize a list to hold product details for this item
         for product in products[:5]:  # Limit to first 5 products for brevity
             name = product.get("name")  # Extract product name
@@ -135,10 +137,6 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), ad
         # Map the missing item to its list of products under Aldi
         stores_data["Aldi"][item] = product_list  # ADDED: Assign product list for this missing item
 
-    
-    import json
-    with open("output.txt", "w") as file:
-        json.dump(stores_data, file, indent=4)
 
 
     return JSONResponse(content={"recipe":recipe, "missing_items": missing_items, "stores": stores_data})

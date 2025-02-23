@@ -90,7 +90,6 @@ def get_aldi_products(address, keyword):
                 region = address_obj.get("regionName", "")
                 zipcode = address_obj.get("zipCode", "")
                 formatted_address = f"{addr1}, {city}, {region} {zipcode}"
-                print(f"Address: {formatted_address}")
                 break
 
             
@@ -105,7 +104,6 @@ def get_aldi_products(address, keyword):
             print("No products found.")
             return
         
-        print("Products found:")
         for product in products:
             name = product.get("name", "Unnamed product")
             price_info = product.get("price", {})
