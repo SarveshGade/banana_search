@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 import base64
@@ -34,15 +35,25 @@ def encode_image(image):
     return base64.b64encode(image).decode('utf-8')
 
 @app.post("/analyze")
-async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...), address: str = Form(...)):
+async def analyze_image(dish: str = Form(...), image: UploadFile = File(...), address: str = Form(...)):
     image_bytes = await image.read()
     base64_image = encode_image(image_bytes)
+    recipe = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a tool which given a dish to make, generates a detailed recipe, with an ingredient list followed by steps to make the dish."},
+            {"role": "user", "content": [
+                {"type": "text", "text": f"Return output as a JSON with an ingredient list, followed by recipe steps."},
+            ]}
+        ],
+        temperature=0.0,
+    )
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a tool which analyzes images of fridges. Given the image, and an input recipe, please tell me which items needed for the recipe are missing."},
             {"role": "user", "content": [
-                {"type": "text", "text": f"Return what is missing from the fridge that is needed in {recipe}. Return output as the following: a word list of items, separated by commas. DO NOT provide any other text or output. ONLY a word list."},
+                {"type": "text", "text": f"Return what is missing from the fridge that is needed in the below recipe. Return output as the following: a word list of items, separated by commas. DO NOT provide any other text or output. ONLY a word list. {recipe}"},
                 {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{base64_image}"}}
             ]}
         ],
@@ -130,4 +141,4 @@ async def analyze_image(recipe: str = Form(...), image: UploadFile = File(...), 
         json.dump(stores_data, file, indent=4)
 
 
-    return JSONResponse(content={"missing_items": missing_items, "stores": stores_data})
+    return JSONResponse(content={"recipe":recipe, "missing_items": missing_items, "stores": stores_data})
