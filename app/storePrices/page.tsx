@@ -22,30 +22,130 @@ const storesData: { [key: string]: GroceryStoreData } = {
     address: "3855 Buford Hwy NE, Atlanta",
     drive_time_minutes: 8.9,
     ingredients: {
-      carrots: { name: "Carrots", price: 1.69 },
-      tortilla: { name: "Guerrero® Tortillas de Harina Caseras Fajita Flour Tortillas", price: 3.29 },
-      eggs: { name: "Kroger® Grade A Jumbo White Eggs", price: 5.39 },
-      ham: { name: "Smithfield Anytime Favorites Diced Ham", price: 3.99 },
-      cheese: { name: "Kroger® Italian Style Blend Shredded Cheese", price: 2.29 },
-    },
+      ground_chicken: {
+        name: "Butterball All Natural 85% Lean/15% Fat Frozen Ground Turkey Roll",
+        price: 3.99
+      },
+      taco_seasoning: {
+        name: "Kroger® Original Taco Seasoning",
+        price: 0.59
+      },
+      corn_tortillas: {
+        name: "La Banderita® Street Taco Sliders Corn Tortillas",
+        price: 1.99
+      },
+      shredded_lettuce: {
+        name: "Kroger® Tri-Color Coleslaw",
+        price: 2.29
+      },
+      diced_tomatoes: {
+        name: "Kroger® Italian Style Diced Tomatoes",
+        price: 1
+      },
+      shredded_cheddar_cheese: {
+        name: "Kroger® Medium Cheddar Shredded Cheese",
+        price: 2.29
+      },
+      sour_cream: {
+        name: "Kroger® Original Sour Cream",
+        price: 1.25
+      },
+      salsa: {
+        name: "Kroger® Thick & Chunky Mild Salsa",
+        price: 2.69
+      },
+      chopped_onions: {
+        name: "Kroger® Recipe Beginnings® Frozen Onions Chopped",
+        price: 1.89
+      },
+      sliced_jalapenos: {
+        name: "Mezzetta™ Deli Sliced Tamed™ Medium Heat Jalapeno Peppers",
+        price: 3.49
+      },
+      chopped_cilantro: {
+        name: "Fresh Cut Chopped Cilantro with White Onions",
+        price: 2.99
+      },
+      lime: {
+        name: "Kroger® Lime Juice",
+        price: 1.69
+      },
+      lemonade: {
+        name: "Simply Lemonade With Strawberry All Natural Non-Gmo",
+        price: 3.29
+      }
+    }
   },
-  "Trader Joe's": {
+  TraderJoes: {
     address: "3183 Peachtree Road, Atlanta",
     drive_time_minutes: 9.2,
     ingredients: {
-      carrots: { name: "CARROTS CUT & PEELED 1.5 LB", retail_price: "1.69" },
-      tortilla: { name: "FLOUR TORTILLAS", retail_price: "1.99" },
-      eggs: { name: "BOWL BREAKFAST CHICKEN SAUSAGE & EGG", retail_price: "4.29" },
-      ham: { name: "HAMBURGER BUNS", retail_price: "2.99" },
-      cheese: { name: "CREAM CHEESE BRICK", retail_price: "1.99" },
-    },
+      ground_chicken: {
+        name: "NATURAL GROUND CHICKEN 92/8",
+        price: 4.49
+      },
+      taco_seasoning: {
+        name: "SPICE TACO SEASONING MIX 1.3OZ",
+        price: 0.99
+      },
+      corn_tortillas: {
+        name: "None",
+        price: 0
+      }
+    }
   },
   Aldi: {
     address: "3963 Buford Highway, Atlanta",
     drive_time_minutes: 9.8,
-    // No ingredients provided for Aldi.
-  },
-};
+    ingredients: {
+      ground_chicken: {
+        name: "Fresh 92% Lean 8% Fat Ground Chicken, 16 oz",
+        price: 3.75
+      },
+      taco_seasoning: {
+        name: "Taco_Seasoning_Mix_1oz",
+        price: 0.55
+      },
+      corn_tortillas: {
+        name: "6_White_Corn_Tortillas_30_count",
+        price: 1.65
+      },
+      shredded_lettuce: {
+        name: "Shredded_Lettuce_8oz",
+        price: 2.09
+      },
+      diced_tomatoes: {
+        name: "Diced_Tomatoes_14.5oz",
+        price: 0.85
+      },
+      shredded_cheddar_cheese: {
+        name: "Thick_Cut_Shredded_White_Cheddar_Cheese_11oz",
+        price: 2.65
+      },
+      sour_cream: {
+        name: "Sour_Cream_16oz",
+        price: 2.05
+      },
+      salsa: {
+        name: "Restaurant_Style_Salsa_16oz",
+        price: 2.75
+      },
+      sliced_jalapenos: {
+        name: "Deli_Sliced_Jalapeno_Peppers_16floz",
+        price: 2.55
+      },
+      lime: {
+        name: "Lime_Margarita_Cocktail_Wine_1.5liter",
+        price: 12.95
+      },
+      lemonade: {
+        name: "Lemonade_Flavored_Water_33.8floz",
+        price: 0.89
+      }
+    }
+  }
+}
+
 
 export default function StorePrices() {
   const router = useRouter();

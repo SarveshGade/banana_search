@@ -62,40 +62,40 @@ export default function Shop() {
   };
 
   const handleGenerateStorePrices = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData();
-    const groceryNames = items.map(item => item.name.trim());
+    // e.preventDefault();
+    // const formData = new FormData();
+    // const groceryNames = items.map(item => item.name.trim());
     
-    // Send the array directly, not as a nested JSON string
-    formData.append("ingredient_input", JSON.stringify(groceryNames));
-    formData.append("address", address);
+    // // Send the array directly, not as a nested JSON string
+    // formData.append("ingredient_input", JSON.stringify(groceryNames));
+    // formData.append("address", address);
     
-    console.log("Sending data:", {
-        ingredients: groceryNames,
-        address: address
-    });
+    // console.log("Sending data:", {
+    //     ingredients: groceryNames,
+    //     address: address
+    // });
 
     try {
-        const response = await fetch("http://localhost:8000/groceries", {
-            method: "POST",
-            body: formData,
-            headers: {
-                'Accept': 'application/json',
-            },
-        });
+    //     const response = await fetch("http://localhost:8000/groceries", {
+    //         method: "POST",
+    //         body: formData,
+    //         headers: {
+    //             'Accept': 'application/json',
+    //         },
+    //     });
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to analyze groceries: ${errorText}`);
-        }
+    //     if (!response.ok) {
+    //         const errorText = await response.text();
+    //         throw new Error(`Failed to analyze groceries: ${errorText}`);
+    //     }
         
-        const data = await response.json();
-        console.log("stores received", data);
+    //     const data = await response.json();
+    //     console.log("stores received", data);
 
-        const stores = data.stores;
-        setStores(stores);
-        localStorage.setItem("shoppingListItems", JSON.stringify(items));
-        localStorage.setItem("store_data", JSON.stringify(stores));  // Fixed typo in key name
+    //     const stores = data.stores;
+    //     setStores(stores);
+    //     localStorage.setItem("shoppingListItems", JSON.stringify(items));
+    //     localStorage.setItem("store_data", JSON.stringify(stores));  // Fixed typo in key name
         
         router.push("/storePrices");
     } catch (error) {
