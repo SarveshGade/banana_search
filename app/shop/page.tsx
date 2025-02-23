@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ShoppingListItem } from "@/components/shopping-list-item";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import router from "next/router";
 
 export default function Shop() {
@@ -33,6 +34,7 @@ export default function Shop() {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [stores, setStores] = useState<string[]>([]);
   const [address, setAddress] = useState("");
+  const router = useRouter();
 
   // Fetch the session on component mount and extract the address from user metadata
   useEffect(() => {
