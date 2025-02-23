@@ -4,15 +4,14 @@ from trader_joes import webscrape
 
 def main():
     # Provide the store address and search term.
-    address = "104 foxwood cir, bonaire, ga"
+    address = "3871 Peachtree Rd NE, Brookhaven, GA 30319"
     search_term = "banana"
     
     # Call the function from the module.
     store_list = stores.get_stores_by_address(address=address)
     for store in store_list:
         print(f"{store['name']} - {store['vicinity']} (Drive time: {store['drive_time_minutes']} minutes)")
-        print("lat: " + str(store["lat"]))
-        print("lng: " + str(store["lng"]))
+        
 
     store_address = ""
     
