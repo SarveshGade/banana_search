@@ -102,8 +102,13 @@ export default function BananaSearch() {
   
 
   const handleCreateShoppingCart = () => {
-
-    router.push("/shop");
+    // Build query parameters by appending each missing ingredient
+    const query = new URLSearchParams();
+    missingIngredients.forEach(ingredient => {
+      query.append("items", ingredient);
+    });
+    // Route to /shop with the query string
+    router.push(`/shop?${query.toString()}`);
   };
 
   return (

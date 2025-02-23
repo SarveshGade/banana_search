@@ -1,27 +1,39 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Plus } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ShoppingListItem } from "@/components/shopping-list-item"
+import { useState } from "react";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ShoppingListItem } from "@/components/shopping-list-item";
+import { useSearchParams } from "next/navigation";
 
 export default function Shop() {
-  const [items, setItems] = useState<Array<{ name: string; quantity: number }>>([])
-  const [newItem, setNewItem] = useState("")
+  const searchParams = useSearchParams();
+  // Get all query parameters named "items"
+  const queryItems = searchParams.getAll("items");
+
+  // Initialize the shopping list with the query items (each with a default quantity of 1)
+  // If no query parameters exist (i.e. when linked from Dashboard), the list remains empty.
+  const [items, setItems] = useState<Array<{ name: string; quantity: number }>>(
+    () => {
+      return queryItems.length > 0
+        ? queryItems.map((item) => ({ name: item, quantity: 1 }))
+        : [];
+    }
+  );
+  const [newItem, setNewItem] = useState("");
 
   const addItem = () => {
     if (newItem.trim()) {
-      setItems([...items, { name: newItem.trim(), quantity: 1 }])
-      setNewItem("")
+      setItems([...items, { name: newItem.trim(), quantity: 1 }]);
+      setNewItem("");
     }
-  }
+  };
 
   const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
-  }
+    setItems(items.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -31,7 +43,9 @@ export default function Shop() {
         </Link>
       </header>
       <main className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-yellow-900 mb-8 text-center">Shopping List</h1>
+        <h1 className="text-3xl font-bold text-yellow-900 mb-8 text-center">
+          Shopping List
+        </h1>
         <div className="max-w-md mx-auto">
           <div className="flex mb-4">
             <Input
@@ -42,7 +56,10 @@ export default function Shop() {
               onKeyPress={(e) => e.key === "Enter" && addItem()}
               className="flex-grow mr-2"
             />
-            <Button onClick={addItem} className="bg-yellow-500 text-yellow-900 hover:bg-yellow-600">
+            <Button
+              onClick={addItem}
+              className="bg-yellow-500 text-yellow-900 hover:bg-yellow-600"
+            >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
@@ -54,9 +71,9 @@ export default function Shop() {
                 quantity={item.quantity}
                 onRemove={() => removeItem(index)}
                 onUpdateQuantity={(newQuantity) => {
-                  const newItems = [...items]
-                  newItems[index].quantity = newQuantity
-                  setItems(newItems)
+                  const newItems = [...items];
+                  newItems[index].quantity = newQuantity;
+                  setItems(newItems);
                 }}
               />
             ))}
@@ -64,6 +81,5 @@ export default function Shop() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-
