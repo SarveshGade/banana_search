@@ -1,21 +1,36 @@
 "use client";
 
-import React, { useState, type ChangeEvent } from "react";
+import React, { useState, useEffect, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Banana, Camera, FileText, ShoppingCart, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function BananaSearch() {
   const [recipeInput, setRecipeInput] = useState("");
   const [recipePDF, setRecipePDF] = useState<File | null>(null);
   const [fridgeImage, setFridgeImage] = useState<File | null>(null);
-  const [address, setAddress] = useState("");
+  const [existingIngredients, setExistingIngredients] = useState("");
   const [recipeOutput, setRecipeOutput] = useState("");
   const [missingIngredients, setMissingIngredients] = useState<string[]>([]);
+  const [address, setAddress] = useState(""); // New state for the user's address
   const router = useRouter();
 
+  // Fetch the session on component mount and extract the address from user metadata
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const userAddress = session.user.user_metadata.address;
+        if (userAddress) {
+          setAddress(userAddress);
+        }
+      }
+    };
+    fetchSession();
+  }, []);
 
   const handleRecipeInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setRecipeInput(e.target.value);
@@ -33,41 +48,42 @@ export default function BananaSearch() {
     }
   };
 
-  const handleAddressChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setAddress(e.target.value);
+  const handleExistingIngredientsChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setExistingIngredients(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!recipeInput || !fridgeImage || !address) {
-      alert("Please enter a recipe, upload a fridge image, and provide an address.");
+      alert("Please enter a recipe, upload a fridge image, and ensure your address is set in your profile.");
       return;
     }
-
     const formData = new FormData();
     formData.append("recipe", recipeInput);
     formData.append("image", fridgeImage);
     formData.append("address", address);
-
     try {
       const response = await fetch("http://localhost:8000/analyze", {
         method: "POST",
         body: formData,
       });
-
       if (!response.ok) {
         throw new Error("Failed to analyze image");
       }
-
       const data = await response.json();
-      setMissingIngredients(data.missing_items);
-
-      setRecipeOutput(JSON.stringify(data, null, 4));
+  
+      setTimeout(() => {
+        const generatedRecipe = data.generated_recipe;
+        const missing = data.missing_items;
+  
+        setRecipeOutput(generatedRecipe);
+        setMissingIngredients(missing);
+      }, 1500);
     } catch (error) {
       console.error("Error analyzing image:", error);
     }
   };
+  
 
   const handleCreateShoppingCart = () => {
     router.push("/shop");
@@ -83,6 +99,7 @@ export default function BananaSearch() {
       </header>
 
       <main className="flex-grow container mx-auto px-4 py-8 flex flex-col items-center">
+        {/* Banana Logo and Title */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative w-32 h-16">
             <img
@@ -99,7 +116,7 @@ export default function BananaSearch() {
             <div className="flex items-center space-x-2">
               <Input
                 id="recipe"
-                placeholder="Enter your desired dish here..."
+                placeholder="Enter your desired dish here... (or a pdf of your recipe!)"
                 value={recipeInput}
                 onChange={handleRecipeInputChange}
                 className="flex-grow bg-white"
@@ -123,6 +140,13 @@ export default function BananaSearch() {
 
             <div className="flex items-center space-x-2">
               <Input
+                id="existing-ingredients"
+                placeholder="Upload an image of your fridge! Fill in any other ingredients too..."
+                value={existingIngredients}
+                onChange={handleExistingIngredientsChange}
+                className="flex-grow bg-white"
+              />
+              <Input
                 id="fridge-image"
                 type="file"
                 accept="image/*"
@@ -139,49 +163,48 @@ export default function BananaSearch() {
               </Button>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Input
-                id="address"
-                placeholder="Enter your address for grocery search..."
-                value={address}
-                onChange={handleAddressChange}
-                className="flex-grow bg-white"
-              />
-            </div>
-
+            {/* Display uploaded file names */}
             <div className="space-y-1">
-              {recipePDF && <p className="text-sm text-gray-600">Recipe PDF: {recipePDF.name}</p>}
-              {fridgeImage && <p className="text-sm text-gray-600">Fridge Image: {fridgeImage.name}</p>}
+              {recipePDF && (
+                <p className="text-sm text-gray-600">Recipe PDF: {recipePDF.name}</p>
+              )}
+              {fridgeImage && (
+                <p className="text-sm text-gray-600">Fridge Image: {fridgeImage.name}</p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full bg-red-400 hover:bg-red-500 text-yellow-900 font-bold">
+            <Button
+              type="submit"
+              className="w-full bg-red-400 hover:bg-red-500 text-yellow-900 font-bold"
+            >
               Analyze Recipe and Fridge
             </Button>
           </div>
         </form>
 
+        {/* Output Bubbles */}
         {recipeOutput && (
-          <div className="w-full max-w-2xl mt-8">
-            <h2 className="text-2xl font-bold mb-4 text-blue-900">Analysis Output</h2>
-            <pre className="bg-gray-100 p-4 rounded-lg text-sm text-blue-700 overflow-x-auto">
-              {recipeOutput}
-            </pre>
-          </div>
-        )}
-
-        {missingIngredients.length > 0 && (
           <div className="mt-8 w-full max-w-2xl">
-            <div className="bg-blue-100 p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-bold text-blue-800 mb-2">Missing Ingredients</h2>
-              <ul className="list-disc list-inside text-blue-700">
-                {missingIngredients.map((ingredient, index) => (
-                  <li key={index}>{ingredient}</li>
-                ))}
-              </ul>
-              <Button onClick={handleCreateShoppingCart} className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-yellow-900">
-                Create Shopping Cart
-              </Button>
+            <div className="bg-green-100 p-6 rounded-lg shadow-md mb-4">
+              <h2 className="text-2xl font-bold text-green-800 mb-2">Generated Recipe</h2>
+              <p className="text-green-700">{recipeOutput}</p>
             </div>
+            {missingIngredients.length > 0 && (
+              <div className="bg-blue-100 p-6 rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold text-blue-800 mb-2">Missing Ingredients</h2>
+                <ul className="list-disc list-inside text-blue-700">
+                  {missingIngredients.map((ingredient, index) => (
+                    <li key={index}>{ingredient}</li>
+                  ))}
+                </ul>
+                <Button
+                  onClick={handleCreateShoppingCart}
+                  className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-yellow-900"
+                >
+                  Create Shopping Cart
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </main>
