@@ -96,14 +96,7 @@ def search_products(store_id, keyword, token):
     data = response.json()
 
     products = data.get("data", [])
-    for product in products:
-        product_name = product.get("description")
-        product_id = product.get("productId")
-        # Assume the product's first item holds the pricing info
-        price = None
-        if product.get("items") and len(product["items"]) > 0:
-            price = product["items"][0].get("price", {}).get("regular")
-    return data.get("data", [])
+    return products
 
 if __name__ == "__main__":
     # Replace with your actual Kroger API client credentials

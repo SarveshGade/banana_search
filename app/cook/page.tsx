@@ -20,6 +20,8 @@ export default function BananaSearch() {
   const [address, setAddress] = useState(""); // New state for the user's address
   const router = useRouter();
 
+  const [loading, setLoading] = useState(false);
+
   // Fetch the session on component mount and extract the address from user metadata
   useEffect(() => {
     const fetchSession = async () => {
@@ -60,6 +62,9 @@ export default function BananaSearch() {
       alert("Please enter a recipe, upload a fridge image, and ensure your address is set in your profile.");
       return;
     }
+
+    setLoading(true);
+
     const formData = new FormData();
     formData.append("dish", recipeInput);
     formData.append("image", fridgeImage);
@@ -87,9 +92,11 @@ export default function BananaSearch() {
         setIngredients(parsedIngredients);
         setSteps(parsedSteps);
         setMissingIngredients(missing);
+        setLoading(false);
       }, 1500);
     } catch (error) {
       console.error("Error generating output:", error);
+      setLoading(false);
     }
   };
   
@@ -192,8 +199,15 @@ export default function BananaSearch() {
           </div>
         </form>
 
+        {/* NEW: Display a loading indicator when waiting for a response */}
+        {loading && (
+          <div className="mt-8 w-full max-w-2xl text-center">
+            <p className="text-xl text-brown-300">Loading...</p> {/* NEW */}
+          </div>
+        )}
+
         {/* Output Bubbles */}
-        {recipeOutput && (
+        {!loading && recipeOutput && (
           <div className="mt-8 w-full max-w-2xl">
             <div className="bg-green-100 p-6 rounded-lg shadow-md mb-4">
               <h2 className="text-2xl font-bold text-green-800 mb-2">Generated Recipe</h2>
