@@ -1,29 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect, type ChangeEvent } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShoppingListItem } from "@/components/shopping-list-item";
 import { useSearchParams } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import router from "next/router";
 
 export default function Shop() {
   const searchParams = useSearchParams();
-  // Get all query parameters named "items"
-  const queryItems = searchParams.getAll("items");
 
   // Initialize the shopping list with the query items (each with a default quantity of 1)
   // If no query parameters exist (i.e. when linked from Dashboard), the list remains empty.
-  const [items, setItems] = useState<Array<{ name: string; quantity: number }>>(
-    () => {
-      return queryItems.length > 0
-        ? queryItems.map((item) => ({ name: item, quantity: 1 }))
-        : [];
+  const [items, setItems] = useState<Array<{ name: string; quantity: number }>>(() => {
+    const storedItems = localStorage.getItem("missingIngredients");
+    if (storedItems) {
+      const parsed = JSON.parse(storedItems);
+      // Check if the parsed data is an array of strings and map it accordingly.
+      if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "string") {
+        return parsed.map((ingredient: string) => ({ name: ingredient, quantity: 1 }));
+      }
+      // Otherwise, assume it’s already in the correct format.
+      return parsed;
     }
-  );
+    return [];
+  });
+  console.log(items);
   const [newItem, setNewItem] = useState("");
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const [stores, setStores] = useState<string[]>([]);
+  const [address, setAddress] = useState("");
+
+  // Fetch the session on component mount and extract the address from user metadata
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const userAddress = session.user.user_metadata.address;
+        if (userAddress) {
+          setAddress(userAddress);
+        }
+      }
+    };
+    fetchSession();
+  }, []);
 
   const addItem = () => {
     if (newItem.trim()) {
@@ -36,8 +59,36 @@ export default function Shop() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const handleGenerateStorePrices = () => {
-    localStorage.setItem("shoppingListItems", JSON.stringify(items));
+  const handleGenerateStorePrices = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData();
+    const groceryNames = items.map(item => item.name.trim());
+    formData.append("ingredient_input", JSON.stringify(groceryNames));
+    formData.append("address", address);
+    console.log("formData: ", formData);
+    try {
+      const response = await fetch("http://localhost:8000/groceries", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error("Failed to analyze groceries");
+      }
+      const data = await response.json();
+      console.log("stores received", data)
+
+      setTimeout(() => {
+        const ingredient_output = JSON.parse(data.ingredient_list);
+        const stores = data.stores;
+
+        setIngredients(ingredient_output);
+        setStores(stores);
+        localStorage.setItem("shoppingListItems", JSON.stringify(items));
+        localStorage.setItem("store_date", stores);
+      }, 1500);
+    } catch (error) {
+      console.error("Error generating output:", error);
+    }
     router.push("/storePrices");
   }
 
@@ -89,7 +140,7 @@ export default function Shop() {
       {/* NEW: Add a footer with a "Store Prices" button at the bottom of the screen */}
       <footer className="px-4 py-4">
         <div className="container mx-auto text-center">
-          <Link href="/store-prices">
+          <Link href="/storePrices">
             <Button className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-yellow-900"
             onClick={handleGenerateStorePrices}>
               Store Prices

@@ -67,7 +67,7 @@ async def analyze_image(dish: str = Form(...), image: UploadFile = File(...)):
     
     
 @app.post("/groceries")
-async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
+async def api_calls(ingredient_input: str = Form(...), address: str = Form(...)):
     access_token = get_access_token(client_id, client_secret)
     address = address
     store_list = get_stores_by_address(address)
@@ -81,7 +81,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
 
         stores_data["Kroger"] = {"address": kroger_address, "drive_time_minutes": drive_time, "ingredients": {}}
 
-        for item in ingredient_list:
+        for item in ingredient_input:
             # Get the list of products matching this missing item from Kroger
             products = search_products(kroger_store_id, item, access_token)
             temp = []  # We'll store product details in a list
@@ -110,7 +110,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
         drive_time = trader_joes_store['drive_time_minutes']
 
         stores_data["Trader Joe's"] = {"address": joes_address, "drive_time_minutes": drive_time, "ingredients": {}}
-        for item in ingredient_list:
+        for item in ingredient_input:
             
             # Get products from Trader Joe's using your custom function.
             # get_results is assumed to return a list of products for the given store and search term.
@@ -175,8 +175,8 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
         
     # Search in Aldi
     if aldi_store:
-        stores_data["Aldi"] = {"address": aldi_address, "drive_time_minutes": drive_time, "ingredients": {}}
-        for item in ingredient_list:  # For each missing ingredient
+        stores_data["Aldi"] = {}  # Initialize Aldi key in our results
+        for item in ingredient_input:  # For each missing ingredient
             # Retrieve Aldi products for the given address and search term
             products = get_aldi_products(store_id, item)
             if not products:
@@ -197,7 +197,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
     #     json.dump(stores_data, file, indent=4)
 
 
-    return JSONResponse(content={"ingredient_list": ingredient_list, "stores": stores_data})
+    return JSONResponse(content={"ingredient_list": ingredient_input, "stores": stores_data})
 
 
 # if __name__ == "__main__":
