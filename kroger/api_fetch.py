@@ -9,6 +9,7 @@ from maps_api import stores
 
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 def get_access_token(client_id, client_secret):
@@ -19,7 +20,6 @@ def get_access_token(client_id, client_secret):
     # Prepare the Basic Auth credentials (base64 encoded)
     credentials = f"{client_id}:{client_secret}"
     encoded_credentials = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
-    print(encoded_credentials)
     
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -124,11 +124,6 @@ if __name__ == "__main__":
         products = search_products(store_id, search_keyword, access_token)
         
         print("\nProducts found:")
-<<<<<<< Updated upstream
-=======
-        # import pprint
-        # pprint.pprint(products)
->>>>>>> Stashed changes
         for product in products:
             product_name = product.get("description")
             product_id = product.get("productId")
