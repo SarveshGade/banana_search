@@ -142,12 +142,10 @@ export default function Shop() {
       {/* NEW: Add a footer with a "Store Prices" button at the bottom of the screen */}
       <footer className="px-4 py-4">
         <div className="container mx-auto text-center">
-          <Link href="/storePrices">
-            <Button className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-yellow-900"
+          <Button className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-yellow-900"
             onClick={handleGenerateStorePrices}>
               Store Prices
-            </Button>
-          </Link>
+          </Button>
         </div>
       </footer>
     </div>
