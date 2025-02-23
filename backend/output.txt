@@ -1,68 +1,80 @@
 {
     "Kroger": {
-        "carrots": {
-            "name": "Kroger\u00ae Peeled Baby Carrots Bag",
-            "price": 1.39
-        },
-        "tortilla": {
-            "name": "Guerrero\u00ae Tortillas de Harina Caseras Fajita Flour Tortillas",
-            "price": 3.29
-        },
-        "eggs": {
-            "name": "Kroger\u00ae Grade A Jumbo White Eggs",
-            "price": 5.39
-        },
-        "ham": {
-            "name": "Smithfield Anytime Favorites Diced Ham",
-            "price": 3.99
-        },
-        "cheese": {
-            "name": "Kroger\u00ae Italian Style Blend Shredded Cheese",
-            "price": 2.29
+        "address": "3855 Buford Hwy NE, Atlanta",
+        "drive_time_minutes": 8.9,
+        "ingredients": {
+            "carrots": {
+                "name": "Carrots",
+                "price": 1.69
+            },
+            "tortilla": {
+                "name": "Guerrero\u00ae Tortillas de Harina Caseras Fajita Flour Tortillas",
+                "price": 3.29
+            },
+            "eggs": {
+                "name": "Kroger\u00ae Grade A Jumbo White Eggs",
+                "price": 5.39
+            },
+            "ham": {
+                "name": "Smithfield Anytime Favorites Diced Ham",
+                "price": 3.99
+            },
+            "cheese": {
+                "name": "Kroger\u00ae Italian Style Blend Shredded Cheese",
+                "price": 2.29
+            }
         }
     },
     "Trader Joe's": {
-        "carrots": {
-            "name": "CARROTS CUT & PEELED 1.5 LB",
-            "retail_price": "1.69"
-        },
-        "tortilla": {
-            "name": "FLOUR TORTILLAS",
-            "retail_price": "1.99"
-        },
-        "eggs": {
-            "name": "BOWL BREAKFAST CHICKEN SAUSAGE & EGG",
-            "retail_price": "4.29"
-        },
-        "ham": {
-            "name": "HAMBURGER BUNS",
-            "retail_price": "2.99"
-        },
-        "cheese": {
-            "name": "CREAM CHEESE BRICK",
-            "retail_price": "1.99"
+        "address": "3183 Peachtree Road, Atlanta",
+        "drive_time_minutes": 9.2,
+        "ingredients": {
+            "carrots": {
+                "name": "CARROTS CUT & PEELED 1.5 LB",
+                "retail_price": "1.69"
+            },
+            "tortilla": {
+                "name": "FLOUR TORTILLAS",
+                "retail_price": "1.99"
+            },
+            "eggs": {
+                "name": "BOWL BREAKFAST CHICKEN SAUSAGE & EGG",
+                "retail_price": "4.29"
+            },
+            "ham": {
+                "name": "HAMBURGER BUNS",
+                "retail_price": "2.99"
+            },
+            "cheese": {
+                "name": "CREAM CHEESE BRICK",
+                "retail_price": "1.99"
+            }
         }
     },
     "Aldi": {
-        "carrots": {
-            "name": "Sliced  Carrots, 14.5 oz Can",
-            "retail_price": "$0.99"
-        },
-        "tortilla": {
-            "name": "Fajita Flour Tortillas, 20 count",
-            "retail_price": "$1.75"
-        },
-        "eggs": {
-            "name": "Liquid  Egg Whites, 32 oz",
-            "retail_price": "$4.05"
-        },
-        "ham": {
-            "name": "Uncured Ham & Cheese Lunch Kit, 2.9 oz",
-            "retail_price": "$2.49"
-        },
-        "cheese": {
-            "name": "Cream  Cheese, 8 oz",
-            "retail_price": "$1.89"
+        "address": "3963 Buford Highway, Atlanta",
+        "drive_time_minutes": 9.8,
+        "ingredients": {
+            "carrots": {
+                "name": "Sliced  Carrots, 14.5 oz Can",
+                "retail_price": "$0.99"
+            },
+            "tortilla": {
+                "name": "Fajita Flour Tortillas, 20 count",
+                "retail_price": "$1.75"
+            },
+            "eggs": {
+                "name": "Liquid  Egg Whites, 32 oz",
+                "retail_price": "$4.05"
+            },
+            "ham": {
+                "name": "Uncured Ham & Cheese Lunch Kit, 2.9 oz",
+                "retail_price": "$2.49"
+            },
+            "cheese": {
+                "name": "Cream  Cheese, 8 oz",
+                "retail_price": "$1.89"
+            }
         }
     }
 }

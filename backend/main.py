@@ -76,8 +76,11 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
     kroger_store = next((store for store in store_list if "Kroger" in store["name"]), None)
     if kroger_store:
         kroger_store_id = get_store_id(kroger_store, access_token)
-        
-        stores_data["Kroger"] = {}
+        kroger_address = kroger_store['vicinity']
+        drive_time = kroger_store['drive_time_minutes']
+
+        stores_data["Kroger"] = {"address": kroger_address, "drive_time_minutes": drive_time, "ingredients": {}}
+
         for item in ingredient_list:
             # Get the list of products matching this missing item from Kroger
             products = search_products(kroger_store_id, item, access_token)
@@ -95,7 +98,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
                     "price": price
                 })
             # Map the missing item to its list of products in the Kroger data
-            stores_data["Kroger"][item] = sorted(temp, key = lambda x: x['price'])[0]
+            stores_data["Kroger"]["ingredients"][item] = sorted(temp, key = lambda x: x['price'])[0]
 
     
 
@@ -103,7 +106,10 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
     trader_joes_store = next((store for store in store_list if "Trader Joe's" in store["name"]), None)
     if trader_joes_store:
         # For each missing ingredient (search term)
-        stores_data["Trader Joe's"] = {}
+        joes_address = trader_joes_store['vicinity']
+        drive_time = trader_joes_store['drive_time_minutes']
+
+        stores_data["Trader Joe's"] = {"address": joes_address, "drive_time_minutes": drive_time, "ingredients": {}}
         for item in ingredient_list:
             
             # Get products from Trader Joe's using your custom function.
@@ -125,7 +131,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
                 })
             
             # Map the missing item to its product list in the Trader Joe's section
-            stores_data["Trader Joe's"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]
+            stores_data["Trader Joe's"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]
 
     zipcode = get_zipcode(address)
 
@@ -138,6 +144,9 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
     if not aldi_store:
         print("No aldi store")
         return
+    
+    aldi_address = aldi_store['vicinity']
+    drive_time = aldi_store['drive_time_minutes']
     
     store_id = None
     try:
@@ -157,7 +166,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
                 city = address_obj.get("city", "")
                 region = address_obj.get("regionName", "")
                 zipcode = address_obj.get("zipCode", "")
-                formatted_address = f"{addr1}, {city}, {region} {zipcode}"
+                formatted_address = f"{addr1}, {city}, {region}"
                 break
 
             
@@ -166,7 +175,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
         
     # Search in Aldi
     if aldi_store:
-        stores_data["Aldi"] = {}  # Initialize Aldi key in our results
+        stores_data["Aldi"] = {"address": aldi_address, "drive_time_minutes": drive_time, "ingredients": {}}
         for item in ingredient_list:  # For each missing ingredient
             # Retrieve Aldi products for the given address and search term
             products = get_aldi_products(store_id, item)
@@ -181,7 +190,7 @@ async def api_calls(ingredient_list: str = Form(...), address: str = Form(...)):
                     "retail_price": retail_price
                 })
             # Map the missing item to its list of products under Aldi
-            stores_data["Aldi"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]  # ADDED: Assign product list for this missing item
+            stores_data["Aldi"]["ingredients"][item] = sorted(product_list, key = lambda x: x['retail_price'])[0]  # ADDED: Assign product list for this missing item
 
     # import json
     # with open("output.txt", "w") as file:
