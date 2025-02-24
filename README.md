@@ -19,6 +19,8 @@ Built with Next.js, React, and TypeScript, ensuring a modern, responsive UI that
 Integrated Supabase to enable secure user sign-up and login, supporting email/password as well as social providers like Google and GitHub.
 ### API Integration:
 Developed custom API endpoints for recipe generation and grocery price optimization. We connected with external grocery APIs to fetch real-time pricing and store data.
+### Web Scraping:
+Analyzed and used custom curl requests to obtain information for specific grocery stores based on location. We used the store ID in order to obtain location-specific store pricing and data.
 ### State Management:
 Leveraged React state and localStorage to persist user data (e.g., missing ingredients, shopping list items) across sessions.
 ### User Interface:
@@ -46,6 +48,8 @@ The importance of efficient state management and data persistence in dynamic web
 Strategies to resolve server-side rendering and hydration issues in Next.js.
 ### API Integration:
 Techniques for integrating and normalizing data from multiple external sources.
+### Web Scraping:
+Strategies to determine how websites obtain information and make requests outside of URL changes and cookies. Techniques for parsing through and integrating data from different websites.
 ### CORS & Async Handling:
 Best practices for handling cross-origin resource sharing and asynchronous API calls.
 ### User-Centric Design:
